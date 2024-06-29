@@ -53,21 +53,21 @@ public class OpenAiHttpService
         throw new NotImplementedException();
     }
 
-    public async Task<Thread> CreateThread()
+    public async Task<OpenAiThread> CreateThread()
     {
         var responseObject = await httpClient.PostAsync("threads", null);
 
         throw new NotImplementedException();
     }
 
-    public async Task<Thread> GetThread(string threadId)
+    public async Task<OpenAiThread> GetThread(string threadId)
     {
         var responseObject = await httpClient.GetAsync($"threads/{threadId}");
 
         throw new NotImplementedException();
     }
 
-    public async Task<Thread> ModifyThread(string threadId, List<Tool> toolResources, Dictionary<string, string> metaData)
+    public async Task<OpenAiThread> ModifyThread(string threadId, List<Tool> toolResources, Dictionary<string, string> metaData)
     {
         var responseObject = await httpClient.PostAsync($"threads/{threadId}", JsonContent.Create(new
         {
@@ -80,7 +80,7 @@ public class OpenAiHttpService
         throw new NotImplementedException();
     }
 
-    public async Task DeleteThread(string threadId)
+    public async Task<DeleteThreadResponse> DeleteThread(string threadId)
     {
         var responseObject = await httpClient.DeleteAsync($"threads/{threadId}");
 
