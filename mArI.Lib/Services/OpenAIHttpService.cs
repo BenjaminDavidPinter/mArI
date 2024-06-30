@@ -86,4 +86,43 @@ public class OpenAiHttpService
 
         throw new NotImplementedException();
     }
+
+    public async Task<Message> CreateMessage(string threadId, Message message)
+    {
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", JsonContent.Create<Message>(message
+        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , System.Text.Json.JsonSerializerOptions.Default));
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<List<Message>> ListMessages(string threadId)
+    {
+        var responseObject = await httpClient.GetAsync($"threads/{threadId}/messages");
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<Message> GetMessage(string threadId, string messageId)
+    {
+        var responseObject = await httpClient.GetAsync($"threads/{threadId}/messages/{messageId}");
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<Message> ModifyMessage(string threadId, string messageId, Dictionary<string, string> metadata)
+    {
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", JsonContent.Create<Dictionary<string, string>>(metadata
+        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , System.Text.Json.JsonSerializerOptions.Default));
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<DeleteMessageResponse> DeleteMessage(string threadId, string messageId)
+    {
+        var responseObject = await httpClient.DeleteAsync($"threads/{threadId}/messages/{messageId}");
+
+        throw new NotImplementedException();
+    }
 }
