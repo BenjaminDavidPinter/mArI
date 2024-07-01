@@ -187,4 +187,20 @@ public class OpenAiHttpService
 
         throw new NotImplementedException();
     }
+
+    public async Task<List<RunStep>> ListRunSteps(string threadId , string runId)
+    {
+        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps");
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<RunStep> GetRunStep(string threadId, string runId, string stepId) 
+    {
+        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps/{stepId}");
+
+        throw new NotImplementedException();
+    }
+
+    
 }
