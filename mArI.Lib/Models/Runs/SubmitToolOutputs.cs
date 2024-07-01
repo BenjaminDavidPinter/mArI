@@ -1,6 +1,6 @@
 namespace mArI.Models;
 
-public class SubmitToolOutputs 
+public class SubmitToolOutputs
 {
-    public List<Tool> tool_calls {get;set;}
+    public List<Tool> tool_calls { get; set; }
 }

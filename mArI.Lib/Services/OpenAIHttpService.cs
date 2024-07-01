@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
 using mArI.Models;
 
@@ -19,9 +20,27 @@ public class OpenAiHttpService
     {
         var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create<Assistant>(createAssistantRequest
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
-        , System.Text.Json.JsonSerializerOptions.Default));
+        , new()
+        {
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        }));
 
-        throw new NotImplementedException();
+        if (!responseObject.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"{responseObject.StatusCode} - {responseObject.ReasonPhrase}");
+        }
+
+        var requestContent = await responseObject.Content.ReadAsStringAsync();
+        var deserializedObject = JsonSerializer.Deserialize<Assistant>(requestContent, JsonSerializerOptions.Default);
+        if (deserializedObject != null)
+        {
+            return deserializedObject;
+        }
+        else
+        {
+            throw new Exception("Unable to deserialize result from Create Assistant");
+        }
+
     }
 
     public async Task<List<Assistant>> ListAssistants()
@@ -50,8 +69,21 @@ public class OpenAiHttpService
     public async Task<DeleteAssistantResponse> DeleteAssistant(string assistantId)
     {
         var responseObject = await httpClient.DeleteAsync($"assistants/{assistantId}");
+        if (!responseObject.IsSuccessStatusCode)
+        {
+            throw new Exception($"Error while deleting assistant {assistantId}");
+        }
 
-        throw new NotImplementedException();
+        var requestContent = await responseObject.Content.ReadAsStringAsync();
+        var deserializedObject = JsonSerializer.Deserialize<DeleteAssistantResponse>(requestContent, JsonSerializerOptions.Default);
+        if (deserializedObject != null)
+        {
+            return deserializedObject;
+        }
+        else
+        {
+            throw new Exception("Unable to deserialize result from Create Assistant");
+        }
     }
 
     public async Task<OpenAiThread> CreateThread()
@@ -188,19 +220,19 @@ public class OpenAiHttpService
         throw new NotImplementedException();
     }
 
-    public async Task<List<RunStep>> ListRunSteps(string threadId , string runId)
+    public async Task<List<RunStep>> ListRunSteps(string threadId, string runId)
     {
         var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps");
 
         throw new NotImplementedException();
     }
 
-    public async Task<RunStep> GetRunStep(string threadId, string runId, string stepId) 
+    public async Task<RunStep> GetRunStep(string threadId, string runId, string stepId)
     {
         var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps/{stepId}");
 
         throw new NotImplementedException();
     }
 
-    
+
 }
