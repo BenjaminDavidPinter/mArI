@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json.Serialization.Metadata;
@@ -122,6 +123,67 @@ public class OpenAiHttpService
     public async Task<DeleteMessageResponse> DeleteMessage(string threadId, string messageId)
     {
         var responseObject = await httpClient.DeleteAsync($"threads/{threadId}/messages/{messageId}");
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<Run> CreateRun(string threadId, Run run)
+    {
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/runs", JsonContent.Create<Run>(run
+        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , System.Text.Json.JsonSerializerOptions.Default));
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<(Thread thread, Run run)> CreateThreadAndRun(string assistantId, OpenAiThread threadRequest)
+    {
+        var responseObject = await httpClient.PostAsync("threads/runs", JsonContent.Create(new
+        {
+            assistant_id = assistantId,
+            thread = threadRequest
+        },
+        new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json),
+        System.Text.Json.JsonSerializerOptions.Default));
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<List<Run>> ListRuns(string threadId)
+    {
+        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs");
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<Run> GetRun(string threadId, string runId)
+    {
+        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}");
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<Run> ModifyRun(string threadId, string runId, Dictionary<string, string> metadata)
+    {
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/runs/{runId}", JsonContent.Create<Dictionary<string, string>>(metadata
+        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , System.Text.Json.JsonSerializerOptions.Default));
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<Run> SubmitToolOutputs(string threadId, string runId, List<ToolOutput> toolOutputs)
+    {
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/runs/{runId}/submit_tool_outputs",
+        JsonContent.Create<List<ToolOutput>>(toolOutputs, new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , System.Text.Json.JsonSerializerOptions.Default));
+
+        throw new NotImplementedException();
+    }
+
+    public async Task<RunCancellationRequest> CancelRun(string threadId, string runId)
+    {
+        var responseObject = httpClient.PostAsync($"threads/{threadId}/runs{runId}/cancel", null);
 
         throw new NotImplementedException();
     }

@@ -7,4 +7,5 @@ public class OpenAiThread
     public int created_at { get; set; }
     public List<ToolResource> tool_resources { get; set; }
     public Dictionary<string, string> metadata { get; set; }
+    public List<Message> messages { get; set; }
 }
