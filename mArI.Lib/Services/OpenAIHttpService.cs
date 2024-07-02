@@ -25,36 +25,21 @@ public class OpenAiHttpService
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         }));
 
-        if (!responseObject.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException($"{responseObject.StatusCode} - {responseObject.ReasonPhrase}");
-        }
-
-        var requestContent = await responseObject.Content.ReadAsStringAsync();
-        var deserializedObject = JsonSerializer.Deserialize<Assistant>(requestContent, JsonSerializerOptions.Default);
-        if (deserializedObject != null)
-        {
-            return deserializedObject;
-        }
-        else
-        {
-            throw new Exception("Unable to deserialize result from Create Assistant");
-        }
-
+        return await ProcessResultToObject<Assistant>(responseObject);
     }
 
     public async Task<List<Assistant>> ListAssistants()
     {
         var responseObject = await httpClient.GetAsync("assistants");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<List<Assistant>>(responseObject);
     }
 
     public async Task<Assistant> GetAssistant(string assistantId)
     {
         var responseObject = await httpClient.GetAsync($"assistants/{assistantId}");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<Assistant>(responseObject);
     }
 
     public async Task<Assistant> ModifyAssistant(Assistant createAssistantRequest)
@@ -63,41 +48,28 @@ public class OpenAiHttpService
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
         , System.Text.Json.JsonSerializerOptions.Default));
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<Assistant>(responseObject);
     }
 
     public async Task<DeleteAssistantResponse> DeleteAssistant(string assistantId)
     {
         var responseObject = await httpClient.DeleteAsync($"assistants/{assistantId}");
-        if (!responseObject.IsSuccessStatusCode)
-        {
-            throw new Exception($"Error while deleting assistant {assistantId}");
-        }
-
-        var requestContent = await responseObject.Content.ReadAsStringAsync();
-        var deserializedObject = JsonSerializer.Deserialize<DeleteAssistantResponse>(requestContent, JsonSerializerOptions.Default);
-        if (deserializedObject != null)
-        {
-            return deserializedObject;
-        }
-        else
-        {
-            throw new Exception("Unable to deserialize result from Create Assistant");
-        }
+        
+        return await ProcessResultToObject<DeleteAssistantResponse>(responseObject);
     }
 
     public async Task<OpenAiThread> CreateThread()
     {
         var responseObject = await httpClient.PostAsync("threads", null);
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<OpenAiThread>(responseObject);
     }
 
     public async Task<OpenAiThread> GetThread(string threadId)
     {
         var responseObject = await httpClient.GetAsync($"threads/{threadId}");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<OpenAiThread>(responseObject);
     }
 
     public async Task<OpenAiThread> ModifyThread(string threadId, List<Tool> toolResources, Dictionary<string, string> metaData)
@@ -110,14 +82,14 @@ public class OpenAiHttpService
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
         , System.Text.Json.JsonSerializerOptions.Default));
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<OpenAiThread>(responseObject);
     }
 
     public async Task<DeleteThreadResponse> DeleteThread(string threadId)
     {
         var responseObject = await httpClient.DeleteAsync($"threads/{threadId}");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<DeleteThreadResponse>(responseObject);
     }
 
     public async Task<Message> CreateMessage(string threadId, Message message)
@@ -235,4 +207,22 @@ public class OpenAiHttpService
     }
 
 
+    private async Task<T> ProcessResultToObject<T>(HttpResponseMessage result)
+    {
+        if (!result.IsSuccessStatusCode)
+        {
+            throw new HttpRequestException($"{result.StatusCode} - {result.ReasonPhrase}");
+        }
+
+        var requestContent = await result.Content.ReadAsStringAsync();
+        var deserializedObject = JsonSerializer.Deserialize<T>(requestContent, JsonSerializerOptions.Default);
+        if (deserializedObject != null)
+        {
+            return deserializedObject;
+        }
+        else
+        {
+            throw new Exception("Unable to deserialize result from Create Assistant");
+        }
+    }
 }

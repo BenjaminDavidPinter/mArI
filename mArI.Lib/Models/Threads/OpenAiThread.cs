@@ -1,11 +1,21 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class OpenAiThread
 {
-    public string id { get; set; }
-    public string @object { get; set; }
-    public int created_at { get; set; }
-    public List<ToolResource> tool_resources { get; set; }
-    public Dictionary<string, string> metadata { get; set; }
-    public List<Message> messages { get; set; }
+    [JsonPropertyName("id")]
+    public string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    public string Object { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public int CreatedAt { get; set; }
+
+    [JsonPropertyName("tool_resources")]
+    public ToolResource ToolResources { get; set; }
+
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, string> MetaData { get; set; }
 }

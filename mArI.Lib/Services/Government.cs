@@ -13,7 +13,7 @@ public class Government
         openAiHttpService = httpService;
     }
 
-    public async Task AddCommitteeMember(string committeeName, params Assistant[] assistants)
+    public async Task<List<Assistant>> AddCommitteeMember(string committeeName, params Assistant[] assistants)
     {
         InitializeCommitteeInDict(committeeName);
         foreach (var assist in assistants)
@@ -21,6 +21,27 @@ public class Government
             var newAssist = await openAiHttpService.CreateAssistant(assist);
             AddAssistantToCommittee(committeeName, newAssist);
         };
+
+        return Committees[committeeName];
+    }
+
+    public async Task<List<OpenAiThread>> CreateThreads(int count){
+        List<OpenAiThread> threads = new();
+        for(int i = 0; i < count; i++){
+            threads.Add(await openAiHttpService.CreateThread());
+        }
+
+        return threads;
+    }
+
+    public async Task<List<DeleteThreadResponse>> DestroyThreads(params string[] threadIds)
+    {
+        List<DeleteThreadResponse> responses = [];
+        foreach(var threadId in threadIds){
+            responses.Add(await openAiHttpService.DeleteThread(threadId));
+        }
+
+        return responses;
     }
 
     public List<Assistant>? TryGetCommittee(string committeeName)
@@ -33,7 +54,7 @@ public class Government
         }
     }
 
-    public async Task<List<DeleteAssistantResponse>> Destroy()
+    public async Task<List<DeleteAssistantResponse>> DestroyAssistants()
     {
         List<DeleteAssistantResponse> responses = new();
         foreach (var key in Committees.Keys)
