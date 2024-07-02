@@ -5,7 +5,7 @@ using mArI.Services;
 using mArI.Models;
 
 var testClient = new HttpClient();
-var openAiApiKey = "API_KEY"; //NOTE: DO NOT CHEKC IN THE API KEY
+var openAiApiKey = "API_KEY"; //NOTE: DO NOT CHECK IN THE API KEY
 testClient.BaseAddress = new("https://api.openai.com/v1/");
 testClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
 testClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
