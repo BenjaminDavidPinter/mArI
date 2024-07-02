@@ -1,9 +1,13 @@
 using System.Runtime.InteropServices.Marshalling;
+using System.Text.Json.Serialization;
 
 namespace mArI.Models;
 
 public class ImageFile
 {
-    public string file_id { get; set; }
-    public string detail { get; set; }
+    [JsonPropertyName("file_id")]
+    public string? FileId { get; set; }
+    
+    [JsonPropertyName("detail")]
+    public string? Detail { get; set; }
 }

@@ -44,6 +44,11 @@ public class Government
         return responses;
     }
 
+    public async Task<Message> CreateMessage(string threadId, Message message)
+    {
+        return await openAiHttpService.CreateMessage(threadId, message);
+    }
+
     public List<Assistant>? TryGetCommittee(string committeeName)
     {
         if(Committees.ContainsKey(committeeName)){

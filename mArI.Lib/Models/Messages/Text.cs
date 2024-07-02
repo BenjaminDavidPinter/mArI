@@ -1,7 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class Text
 {
-    public string value { get; set; }
-    public List<Annotation> annotations { get; set; }
+    [JsonPropertyName("value")]
+    public string? Value { get; set; }
+
+    [JsonPropertyName("annotations")]
+    public List<Annotation>? Annotations { get; set; }
 }

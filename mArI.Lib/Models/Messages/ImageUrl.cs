@@ -1,7 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class ImageUrl
 {
-    public string url { get; set; }
-    public string detail { get; set; }
+    [JsonPropertyName("url")]
+    public string? Url { get; set; }
+    
+    [JsonPropertyName("detail")]
+    public string? Detail { get; set; }
 }

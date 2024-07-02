@@ -1,6 +1,9 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class IncompleteDetails
 {
-    public string reason { get; set; }
+    [JsonPropertyName("reason")]
+    public string? Reason { get; set; }
 }

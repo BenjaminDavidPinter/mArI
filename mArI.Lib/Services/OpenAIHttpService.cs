@@ -44,7 +44,7 @@ public class OpenAiHttpService
 
     public async Task<Assistant> ModifyAssistant(Assistant createAssistantRequest)
     {
-        var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create<Assistant>(createAssistantRequest
+        var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create(createAssistantRequest
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
         , System.Text.Json.JsonSerializerOptions.Default));
 
@@ -94,11 +94,14 @@ public class OpenAiHttpService
 
     public async Task<Message> CreateMessage(string threadId, Message message)
     {
-        var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", JsonContent.Create<Message>(message
-        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
-        , System.Text.Json.JsonSerializerOptions.Default));
+        var postContent = JsonContent.Create(message
+            , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+            , new JsonSerializerOptions() {
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+        });
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", postContent);
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<Message>(responseObject);
     }
 
     public async Task<List<Message>> ListMessages(string threadId)
