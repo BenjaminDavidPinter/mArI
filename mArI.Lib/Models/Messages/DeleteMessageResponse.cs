@@ -1,8 +1,15 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class DeleteMessageResponse
 {
-    public string id { get; set; }
-    public string @object { get; set; }
-    public bool deleted { get; set; }
+    [JsonPropertyName("id")]
+    public string Id { get; set; }
+    
+    [JsonPropertyName("object")]
+    public string Object { get; set; }
+
+    [JsonPropertyName("deleted")]
+    public bool Deleted { get; set; }
 }

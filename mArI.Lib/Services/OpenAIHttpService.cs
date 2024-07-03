@@ -128,7 +128,7 @@ public class OpenAiHttpService
     {
         var responseObject = await httpClient.DeleteAsync($"threads/{threadId}/messages/{messageId}");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<DeleteMessageResponse>(responseObject);
     }
 
     public async Task<Run> CreateRun(string threadId, Run run)

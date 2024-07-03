@@ -16,19 +16,36 @@ public class Government
     public async Task<List<Assistant>> AddCommitteeMember(string committeeName, params Assistant[] assistants)
     {
         InitializeCommitteeInDict(committeeName);
+        List<Task<Assistant>> assistantCreationTasks = [];
         foreach (var assist in assistants)
         {
-            var newAssist = await openAiHttpService.CreateAssistant(assist);
-            AddAssistantToCommittee(committeeName, newAssist);
+            assistantCreationTasks.Add(openAiHttpService.CreateAssistant(assist));
         };
+
+        Task.WaitAll([..assistantCreationTasks]);
+
+        foreach (var createdAssistant in assistantCreationTasks)
+        {
+            AddAssistantToCommittee(committeeName, createdAssistant.Result);   
+        }
 
         return Committees[committeeName];
     }
 
-    public async Task<List<OpenAiThread>> CreateThreads(int count){
-        List<OpenAiThread> threads = new();
-        for(int i = 0; i < count; i++){
-            threads.Add(await openAiHttpService.CreateThread());
+    public async Task<List<OpenAiThread>> CreateThreads(int count)
+    {
+        List<OpenAiThread> threads = [];
+        List<Task<OpenAiThread>> threadTasks = [];
+        for (int i = 0; i < count; i++)
+        {
+            threadTasks.Add(openAiHttpService.CreateThread());
+        }
+
+        Task.WaitAll([..threadTasks]);
+
+        foreach (var createdThread in threadTasks)
+        {
+            threads.Add(createdThread.Result);
         }
 
         return threads;
@@ -37,8 +54,17 @@ public class Government
     public async Task<List<DeleteThreadResponse>> DestroyThreads(params string[] threadIds)
     {
         List<DeleteThreadResponse> responses = [];
-        foreach(var threadId in threadIds){
-            responses.Add(await openAiHttpService.DeleteThread(threadId));
+        List<Task<DeleteThreadResponse>> deleteThreadRequests = [];
+        foreach (var threadId in threadIds)
+        {
+            deleteThreadRequests.Add(openAiHttpService.DeleteThread(threadId));
+        }
+
+        Task.WaitAll([..deleteThreadRequests]);
+
+        foreach (var deletedThread in deleteThreadRequests)
+        {
+            responses.Add(deletedThread.Result);
         }
 
         return responses;
@@ -49,12 +75,19 @@ public class Government
         return await openAiHttpService.CreateMessage(threadId, message);
     }
 
+    public async Task<DeleteMessageResponse> DestroyMessage(string threadId, string messageId)
+    {
+        return await openAiHttpService.DeleteMessage(threadId, messageId);
+    }
+
     public List<Assistant>? TryGetCommittee(string committeeName)
     {
-        if(Committees.ContainsKey(committeeName)){
+        if (Committees.ContainsKey(committeeName))
+        {
             return Committees[committeeName];
         }
-        else {
+        else
+        {
             return null!;
         }
     }
@@ -62,12 +95,20 @@ public class Government
     public async Task<List<DeleteAssistantResponse>> DestroyAssistants()
     {
         List<DeleteAssistantResponse> responses = new();
+        List<Task<DeleteAssistantResponse>> deletionRequests = [];
         foreach (var key in Committees.Keys)
         {
             foreach (var assist in Committees[key])
             {
-                responses.Add(await openAiHttpService.DeleteAssistant(assist.Id));
+                deletionRequests.Add(openAiHttpService.DeleteAssistant(assist.Id));
             }
+        }
+
+        Task.WaitAll([..deletionRequests]);
+
+        foreach (var deletionRequest in deletionRequests)
+        {
+            responses.Add(deletionRequest.Result);
         }
 
         return responses;
