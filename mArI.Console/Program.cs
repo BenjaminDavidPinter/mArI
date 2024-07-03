@@ -48,14 +48,13 @@ try
         ColorConsole.WriteLine($"\t\t{thread.Id}", fgColor: ConsoleColor.White);
     }
 
-    List<Message> messages = new();
+    List<Message<List<MessageContent>>> messages = new();
     foreach(OpenAiThread t in threads) 
     {
-        var message = await testGov.CreateMessage(t.Id, new() {
-            Content = [
-                new(){Type = "text", Text = new() {Value = "What color is the sky?"}}
-            ]
-        });
+        messages.Add(await testGov.CreateMessage(t.Id, new() {
+            Role = "user",
+            Content = "What color is the sky?"
+        }));
     }
     ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
     ColorConsole.WriteLine(" - Messages Created", fgColor: ConsoleColor.White);

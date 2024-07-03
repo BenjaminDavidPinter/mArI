@@ -1,9 +1,6 @@
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 using mArI.Models;
 
 namespace mArI.Services;
@@ -92,7 +89,7 @@ public class OpenAiHttpService
         return await ProcessResultToObject<DeleteThreadResponse>(responseObject);
     }
 
-    public async Task<Message> CreateMessage(string threadId, Message message)
+    public async Task<Message<List<MessageContent>>> CreateMessage<T>(string threadId, Message<T> message)
     {
         var postContent = JsonContent.Create(message
             , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
@@ -101,24 +98,24 @@ public class OpenAiHttpService
         });
         var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", postContent);
 
-        return await ProcessResultToObject<Message>(responseObject);
+        return await ProcessResultToObject<Message<List<MessageContent>>>(responseObject);
     }
 
-    public async Task<List<Message>> ListMessages(string threadId)
+    public async Task<List<Message<MessageContent>>> ListMessages(string threadId)
     {
         var responseObject = await httpClient.GetAsync($"threads/{threadId}/messages");
 
         throw new NotImplementedException();
     }
 
-    public async Task<Message> GetMessage(string threadId, string messageId)
+    public async Task<Message<MessageContent>> GetMessage(string threadId, string messageId)
     {
         var responseObject = await httpClient.GetAsync($"threads/{threadId}/messages/{messageId}");
 
         throw new NotImplementedException();
     }
 
-    public async Task<Message> ModifyMessage(string threadId, string messageId, Dictionary<string, string> metadata)
+    public async Task<Message<MessageContent>> ModifyMessage(string threadId, string messageId, Dictionary<string, string> metadata)
     {
         var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", JsonContent.Create<Dictionary<string, string>>(metadata
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)

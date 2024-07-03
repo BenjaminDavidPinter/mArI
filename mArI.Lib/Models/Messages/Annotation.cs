@@ -1,11 +1,24 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class Annotation
 {
-    public string type { get; set; }
-    public string text { get; set; }
-    public int start_index { get; set; }
-    public int end_index { get; set; }
-    public FileCitation file_citation { get; set; }
-    public FilePath file_path { get; set; }
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+    
+    [JsonPropertyName("text")]
+    public string? Text { get; set; }
+
+    [JsonPropertyName("start_index")]
+    public int? StartIndex { get; set; }
+
+    [JsonPropertyName("end_index")]
+    public int? EndIndex { get; set; }
+
+    [JsonPropertyName("file_citation")]
+    public FileCitation? FileCitation { get; set; }
+
+    [JsonPropertyName("file_path")]
+    public FilePath? FilePath { get; set; }
 }

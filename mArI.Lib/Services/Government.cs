@@ -44,7 +44,7 @@ public class Government
         return responses;
     }
 
-    public async Task<Message> CreateMessage(string threadId, Message message)
+    public async Task<Message<List<MessageContent>>> CreateMessage(string threadId, Message<string> message)
     {
         return await openAiHttpService.CreateMessage(threadId, message);
     }

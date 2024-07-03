@@ -1,10 +1,8 @@
-using System.Dynamic;
-using System.Net.Mail;
 using System.Text.Json.Serialization;
 
 namespace mArI.Models;
 
-public class Message
+public class Message<ContentFormat>
 {
     [JsonPropertyName("id")]
     public string? Id { get; set; }
@@ -34,7 +32,7 @@ public class Message
     public string? Role { get; set; }
 
     [JsonPropertyName("content")]
-    public List<MessageContent>? Content { get; set; }
+    public ContentFormat Content { get; set; }
 
     [JsonPropertyName("assistant_id")]   
     public string? AssistantId { get; set; }
