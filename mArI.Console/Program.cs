@@ -38,6 +38,13 @@ try
         {
             Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}"
         },
+    ]);
+
+    await testGov.AddCommitteeMember("TestCommittee2", [
+        new("gpt-4o") 
+        {
+            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}"
+        }, 
         new("gpt-4o")
         {
             Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}"
@@ -47,16 +54,25 @@ try
             Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}"
         },
     ]);
+    
     ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
     ColorConsole.WriteLine(" - Assistants Created", fgColor: ConsoleColor.White);
 
     var members = testGov.TryGetCommittee("TestCommittee");
+    ColorConsole.WriteLine($"\t\t'TestCommittee'", fgColor: ConsoleColor.Magenta);
     foreach (var member in members?? [])
     {
-        ColorConsole.WriteLine($"\t\t{member.Id}\t[{member.Name}]", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"\t\t\t{member.Id}\t[{member.Name}]", fgColor: ConsoleColor.White);
     }
 
-    var threads = await testGov.CreateThreads(members.Count);
+    var members2 = testGov.TryGetCommittee("TestCommittee2");
+    ColorConsole.WriteLine($"\t\t'TestCommittee2'", fgColor: ConsoleColor.Magenta);
+    foreach (var member in members2?? [])
+    {
+        ColorConsole.WriteLine($"\t\t\t{member.Id}\t[{member.Name}]", fgColor: ConsoleColor.White);
+    }
+
+    var threads = await testGov.CreateThreads(testGov.GetRequiredThreadCount());
     ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
     ColorConsole.WriteLine(" - Threads Created", fgColor: ConsoleColor.White);
     foreach (var thread in threads?? [])

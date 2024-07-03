@@ -32,6 +32,17 @@ public class Government
         return Committees[committeeName];
     }
 
+    public int GetRequiredThreadCount() 
+    {
+        int total = 0;
+        foreach (var key in Committees.Keys)
+        {
+            total += Committees[key].Count;
+        }
+
+        return total;
+    }
+
     public async Task<List<OpenAiThread>> CreateThreads(int count)
     {
         List<OpenAiThread> threads = [];
