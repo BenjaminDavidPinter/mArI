@@ -1,7 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class TruncationStrategy
 {
-    public string type { get; set; }
-    public int last_messages { get; set; }
+    [JsonPropertyName("type")]
+    public string Type { get; set; }
+
+    [JsonPropertyName("last_messages")]
+    public int? LastMessages { get; set; }
 }

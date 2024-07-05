@@ -51,7 +51,7 @@ public class OpenAiHttpService
     public async Task<DeleteAssistantResponse> DeleteAssistant(string assistantId)
     {
         var responseObject = await httpClient.DeleteAsync($"assistants/{assistantId}");
-        
+
         return await ProcessResultToObject<DeleteAssistantResponse>(responseObject);
     }
 
@@ -93,9 +93,10 @@ public class OpenAiHttpService
     {
         var postContent = JsonContent.Create(message
             , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
-            , new JsonSerializerOptions() {
+            , new JsonSerializerOptions()
+            {
                 DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
-        });
+            });
         var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", postContent);
 
         return await ProcessResultToObject<Message<List<MessageContent>>>(responseObject);
@@ -131,13 +132,16 @@ public class OpenAiHttpService
         return await ProcessResultToObject<DeleteMessageResponse>(responseObject);
     }
 
-    public async Task<Run> CreateRun(string threadId, Run run)
+    public async Task<Run> CreateRun(string threadId, string assistantId)
     {
-        var responseObject = await httpClient.PostAsync($"threads/{threadId}/runs", JsonContent.Create<Run>(run
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/runs", JsonContent.Create(new
+        {
+            assistant_id = assistantId
+        }
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
         , System.Text.Json.JsonSerializerOptions.Default));
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<Run>(responseObject);
     }
 
     public async Task<(Thread thread, Run run)> CreateThreadAndRun(string assistantId, OpenAiThread threadRequest)

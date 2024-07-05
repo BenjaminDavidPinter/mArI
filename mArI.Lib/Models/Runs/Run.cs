@@ -1,37 +1,89 @@
 using System.Dynamic;
 using System.Numerics;
+using System.Text.Json.Serialization;
 
 namespace mArI.Models;
 
 public class Run
 {
-    public string id { get; set; }
-    public string @object { get; set; }
-    public int created_at { get; set; }
-    public string thread_id { get; set; }
-    public string assistant_id { get; set; }
-    public string status { get; set; }
-    public RequiredAction required_action { get; set; }
-    public Error last_error { get; set; }
-    public int expires_at { get; set; }
-    public int started_at { get; set; }
-    public int cancelled_at { get; set; }
-    public int failed_at { get; set; }
-    public int completed_at { get; set; }
-    public IncompleteDetails incomplete_details { get; set; }
-    public string model { get; set; }
-    public string instructions { get; set; }
-    public List<Tool> tools { get; set; }
-    public Dictionary<string, string> metadata { get; set; }
-    public UsageStatistics usage { get; set; }
-    public double temperature { get; set; }
-    public double top_p { get; set; }
-    public int max_prompt_tokens { get; set; }
-    public int max_completion_tokens { get; set; }
-    public TruncationStrategy truncation_strategy { get; set; }
-    //NOTE: Object or String?
-    public string tool_choice { get; set; }
-    public bool parallel_tool_calls { get; set; }
-    //NOTE: Object or String?
-    public string response_format { get; set; }
+    [JsonPropertyName("id")]
+    public string Id { get; set; }
+
+    [JsonPropertyName("object")]
+    public string Object { get; set; }
+
+    [JsonPropertyName("created_at")]
+    public long? CreatedAt { get; set; }
+
+    [JsonPropertyName("thread_id")]
+    public string ThreadId { get; set; }
+
+    [JsonPropertyName("assistant_id")]
+    public string AssistantId { get; set; }
+
+    [JsonPropertyName("status")]
+    public string Status { get; set; }
+
+    [JsonPropertyName("required_action")]
+    public RequiredAction? RequiredAction { get; set; }
+
+    [JsonPropertyName("last_error")]
+    public Error? LastError { get; set; }
+
+    [JsonPropertyName("expires_at")]
+    public long? ExpiresAt { get; set; }
+
+    [JsonPropertyName("started_at")]
+    public long? StartedAt { get; set; }
+
+    [JsonPropertyName("cancelled_at")]
+    public long? CancelledAt { get; set; }
+
+    [JsonPropertyName("failed_at")]
+    public long? FailedAt { get; set; }
+
+    [JsonPropertyName("completed_at")]
+    public long? CompletedAt { get; set; }
+
+    [JsonPropertyName("incomplete_details")]
+    public IncompleteDetails? IncompleteDetails { get; set; }
+
+    [JsonPropertyName("model")]
+    public string Model { get; set; }
+
+    [JsonPropertyName("instructions")]
+    public string Instructions { get; set; }
+
+    [JsonPropertyName("tools")]
+    public List<Tool>? Tools { get; set; }
+
+    [JsonPropertyName("metadata")]
+    public Dictionary<string, string>? Metadata { get; set; }
+
+    [JsonPropertyName("usage")]
+    public UsageStatistics? Usage { get; set; }
+
+    [JsonPropertyName("temperature")]
+    public double? Temperature { get; set; }
+
+    [JsonPropertyName("top_p")]
+    public double? TopP { get; set; }
+
+    [JsonPropertyName("max_prompt_tokens")]
+    public int? MaxPromptTokens { get; set; }
+
+    [JsonPropertyName("max_completion_tokens")]
+    public int? MaxCompletionTokens { get; set; }
+
+    [JsonPropertyName("truncation_strategy")]
+    public TruncationStrategy? TruncationStrategy { get; set; }
+
+    [JsonPropertyName("tool_choice")]
+    public string ToolChoice { get; set; }
+
+    [JsonPropertyName("parallel_tool_calls")]
+    public bool? ParallelToolCalls { get; set; }
+
+    [JsonPropertyName("response_format")]
+    public string ResponseFormat { get; set; }
 }

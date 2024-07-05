@@ -22,17 +22,17 @@ public class Government
             assistantCreationTasks.Add(openAiHttpService.CreateAssistant(assist));
         };
 
-        Task.WaitAll([..assistantCreationTasks]);
+        Task.WaitAll([.. assistantCreationTasks]);
 
         foreach (var createdAssistant in assistantCreationTasks)
         {
-            AddAssistantToCommittee(committeeName, createdAssistant.Result);   
+            AddAssistantToCommittee(committeeName, createdAssistant.Result);
         }
 
         return Committees[committeeName];
     }
 
-    public int GetRequiredThreadCount() 
+    public int GetRequiredThreadCount()
     {
         int total = 0;
         foreach (var key in Committees.Keys)
@@ -52,7 +52,7 @@ public class Government
             threadTasks.Add(openAiHttpService.CreateThread());
         }
 
-        Task.WaitAll([..threadTasks]);
+        Task.WaitAll([.. threadTasks]);
 
         foreach (var createdThread in threadTasks)
         {
@@ -71,7 +71,7 @@ public class Government
             deleteThreadRequests.Add(openAiHttpService.DeleteThread(threadId));
         }
 
-        Task.WaitAll([..deleteThreadRequests]);
+        Task.WaitAll([.. deleteThreadRequests]);
 
         foreach (var deletedThread in deleteThreadRequests)
         {
@@ -115,7 +115,7 @@ public class Government
             }
         }
 
-        Task.WaitAll([..deletionRequests]);
+        Task.WaitAll([.. deletionRequests]);
 
         foreach (var deletionRequest in deletionRequests)
         {
@@ -123,6 +123,11 @@ public class Government
         }
 
         return responses;
+    }
+
+    public async Task<Run> CreateRun(string threadId, string assistantId)
+    {
+        return await openAiHttpService.CreateRun(threadId, assistantId);
     }
 
     private void InitializeCommitteeInDict(string committeeName)
