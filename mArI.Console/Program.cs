@@ -4,8 +4,12 @@ using Moq;
 using mArI.Services;
 using mArI.Models;
 using System.Diagnostics;
+using Castle.Components.DictionaryAdapter.Xml;
 
 Stopwatch sw = new();
+
+string assistantInstructionsNicknames = "You are an assistant which helps determine if two names are nicknames of one another. I will provide to you two names, split by a pipe character (|), and you will return the word 'True' if you think they could refer to the same person, or 'False' if you do not think they would";
+string assistantInstructionsEmployers = "You are an assistant which helps determine if the two provided company names could refer to the same place of employment. Your purpose is to help reconcile differences between sources of informaiton; where someone said they worked, and where official IRS documentation says they worked. For example, some people say they worked at Olive Garden, but the official owner of Olive Garden is Darden Restaurants. You should consider that, and all similar scenarios a match. I will provide to you two employer names, split by a pipe character (|), and you will return the word 'True' if you think they could refer to the same place of employment, or 'False' if you do not think they would";
 
 sw.Start();
 ColorConsole.WriteLine("Setup Phase", fgColor: ConsoleColor.Blue);
@@ -29,18 +33,24 @@ try
         new("gpt-4o")
         {
             Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = 0.1
+            Temperature = new Random().NextDouble(),
+            TopP = new Random().NextDouble(),
+            Instructions = assistantInstructionsEmployers
         },
         new("gpt-4o")
         {
             Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = 0.1
+            Temperature = new Random().NextDouble(),
+            TopP = new Random().NextDouble(),
+            Instructions = assistantInstructionsEmployers
         },
         new("gpt-4o")
         {
             Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = 0.1
-        },
+            Temperature = new Random().NextDouble(),
+            TopP = new Random().NextDouble(),
+            Instructions = assistantInstructionsEmployers
+        }
     ]);
 
     ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
@@ -50,7 +60,7 @@ try
     ColorConsole.WriteLine($"\t\t'TestCommittee'", fgColor: ConsoleColor.Magenta);
     foreach (var member in members ?? [])
     {
-        ColorConsole.WriteLine($"\t\t\t{member.Id}\t[{member.Name}]", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"\t\t\t{member.Id}\t[{member.Name}] - [{member.Temperature}|{member.TopP}]", fgColor: ConsoleColor.White);
     }
 
     var threads = await testGov.CreateThreads(testGov.GetRequiredThreadCount());
@@ -68,7 +78,7 @@ try
         messageCreationTasks.Add(testGov.CreateMessage(t.Id, new()
         {
             Role = "user",
-            Content = "What color is the sky? Your response should only be a single word."
+            Content = "Audi Motors | Volkswagen"
         }));
     }
     Task.WaitAll([.. messageCreationTasks]);
