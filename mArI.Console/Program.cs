@@ -103,6 +103,19 @@ try
         ColorConsole.WriteLine($"\t\t{run.Id} - [{run.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(run.CreatedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
     }
 
+    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
+    ColorConsole.WriteLine(" - Waiting for Runs to Complete", fgColor: ConsoleColor.White);
+    List<Task<Run>> pendingRuns = [];
+    foreach (var run in runs)
+    {
+        pendingRuns.Add(testGov.WaitForRunToComplete(run.ThreadId, run.Id));
+    }
+    Task.WaitAll([.. pendingRuns]);
+    foreach (var run in pendingRuns ?? [])
+    {
+        ColorConsole.WriteLine($"\t\t{run.Result.Id} - [{run.Result.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(run.Result.CreatedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
+    }
+
     sw.Stop();
     Console.WriteLine();
     ColorConsole.Write("", fgColor: ConsoleColor.Yellow);

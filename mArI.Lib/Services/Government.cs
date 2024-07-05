@@ -130,6 +130,23 @@ public class Government
         return await openAiHttpService.CreateRun(threadId, assistantId);
     }
 
+    public async Task<Run> WaitForRunToComplete(string threadId, string runId)
+    {
+        var currentResult = await openAiHttpService.GetRun(threadId, runId);
+        while (currentResult.Status != "completed"
+        && currentResult.Status != "failed"
+        && currentResult.Status != "incomplete"
+        && currentResult.Status != "cancelled"
+        && currentResult.Status != "requires_action"
+        && currentResult.Status != "expired")
+        {
+            await Task.Delay(100);
+            currentResult = await openAiHttpService.GetRun(threadId, runId);
+        }
+
+        return currentResult;
+    }
+
     private void InitializeCommitteeInDict(string committeeName)
     {
         if (!Committees.ContainsKey(committeeName))

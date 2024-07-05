@@ -166,9 +166,9 @@ public class OpenAiHttpService
 
     public async Task<Run> GetRun(string threadId, string runId)
     {
-        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}");
+        var responseObject = await httpClient.GetAsync($"threads/{threadId}/runs/{runId}");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<Run>(responseObject);
     }
 
     public async Task<Run> ModifyRun(string threadId, string runId, Dictionary<string, string> metadata)
