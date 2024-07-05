@@ -1,8 +1,15 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class StepDetail
 {
-    public string @type { get; set; }
-    public MessageCreation message_creation { get; set; }
-    public List<Tool> tool_calls { get; set; }
+    [JsonPropertyName("type")]
+    public string Type { get; set; }
+
+    [JsonPropertyName("message_creation")]
+    public MessageCreation MessageCreation { get; set; }
+
+    [JsonPropertyName("tool_calls")]
+    public List<Tool> ToolCalls { get; set; }
 }

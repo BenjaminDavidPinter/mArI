@@ -28,15 +28,18 @@ try
     await testGov.AddCommitteeMember("TestCommittee", [
         new("gpt-4o")
         {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}"
+            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
+            Temperature = 0.1
         },
         new("gpt-4o")
         {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}"
+            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
+            Temperature = 0.1
         },
         new("gpt-4o")
         {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}"
+            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
+            Temperature = 0.1
         },
     ]);
 
@@ -65,7 +68,7 @@ try
         messageCreationTasks.Add(testGov.CreateMessage(t.Id, new()
         {
             Role = "user",
-            Content = "What color is the sky?"
+            Content = "What color is the sky? Your response should only be a single word."
         }));
     }
     Task.WaitAll([.. messageCreationTasks]);
@@ -113,7 +116,43 @@ try
     Task.WaitAll([.. pendingRuns]);
     foreach (var run in pendingRuns ?? [])
     {
-        ColorConsole.WriteLine($"\t\t{run.Result.Id} - [{run.Result.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(run.Result.CreatedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"\t\t{run.Result.Id} - [{run.Result.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(run.Result.CompletedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
+    }
+
+    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
+    ColorConsole.WriteLine(" - Getting Messages Added by Committee Members", fgColor: ConsoleColor.White);
+    List<Task<RunStepList>> runStepListsTasks = [];
+    foreach (var run in runs)
+    {
+        runStepListsTasks.Add(testGov.GetRunSteps(run.ThreadId, run.Id));
+    }
+    Task.WaitAll([.. runStepListsTasks]);
+    foreach (var run in runStepListsTasks ?? [])
+    {
+        foreach (var step in run.Result.Steps)
+        {
+            ColorConsole.WriteLine($"\t\t{step.Id} - [{step.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(step.CompletedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
+        }
+    }
+
+    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
+    ColorConsole.WriteLine(" - Getting Message Content", fgColor: ConsoleColor.White);
+    List<Task<Message<List<MessageContent>>>> aiMessages = [];
+    foreach (var aiMessage in runStepListsTasks)
+    {
+        foreach (var step in aiMessage.Result.Steps)
+        {
+            aiMessages.Add(testGov.GetMessage(step.ThreadId, step.StepDetails.MessageCreation.MessageId));
+        }
+    }
+    Task.WaitAll([.. aiMessages]);
+    foreach (var message in aiMessages ?? [])
+    {
+        ColorConsole.WriteLine($"\t\t{message.Result.Id} - [{message.Result.Status}]", fgColor: ConsoleColor.White);
+        foreach (var messageContent in message.Result.Content)
+        {
+            ColorConsole.WriteLine($"\t\t  {messageContent.Text.Value}", fgColor: ConsoleColor.White);
+        }
     }
 
     sw.Stop();

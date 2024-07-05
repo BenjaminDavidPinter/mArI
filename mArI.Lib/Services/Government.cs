@@ -86,6 +86,11 @@ public class Government
         return await openAiHttpService.CreateMessage(threadId, message);
     }
 
+    public async Task<Message<List<MessageContent>>> GetMessage(string threadId, string messageId)
+    {
+        return await openAiHttpService.GetMessage(threadId, messageId);
+    }
+
     public async Task<DeleteMessageResponse> DestroyMessage(string threadId, string messageId)
     {
         return await openAiHttpService.DeleteMessage(threadId, messageId);
@@ -145,6 +150,11 @@ public class Government
         }
 
         return currentResult;
+    }
+
+    public async Task<RunStepList> GetRunSteps(string threadId, string runId)
+    {
+        return await openAiHttpService.ListRunSteps(threadId, runId);
     }
 
     private void InitializeCommitteeInDict(string committeeName)

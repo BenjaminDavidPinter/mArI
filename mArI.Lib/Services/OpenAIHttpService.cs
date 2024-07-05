@@ -109,11 +109,11 @@ public class OpenAiHttpService
         throw new NotImplementedException();
     }
 
-    public async Task<Message<MessageContent>> GetMessage(string threadId, string messageId)
+    public async Task<Message<List<MessageContent>>> GetMessage(string threadId, string messageId)
     {
         var responseObject = await httpClient.GetAsync($"threads/{threadId}/messages/{messageId}");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<Message<List<MessageContent>>>(responseObject);
     }
 
     public async Task<Message<MessageContent>> ModifyMessage(string threadId, string messageId, Dictionary<string, string> metadata)
@@ -196,11 +196,11 @@ public class OpenAiHttpService
         throw new NotImplementedException();
     }
 
-    public async Task<List<RunStep>> ListRunSteps(string threadId, string runId)
+    public async Task<RunStepList> ListRunSteps(string threadId, string runId)
     {
-        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps");
+        var responseObject = await httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps");
 
-        throw new NotImplementedException();
+        return await ProcessResultToObject<RunStepList>(responseObject);
     }
 
     public async Task<RunStep> GetRunStep(string threadId, string runId, string stepId)

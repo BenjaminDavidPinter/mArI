@@ -1,6 +1,9 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class MessageCreation
 {
-    public string message_id { get; set; }
+    [JsonPropertyName("message_id")]
+    public string MessageId { get; set; }
 }
