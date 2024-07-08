@@ -1,16 +1,10 @@
 ﻿using System.Net.Http.Headers;
 using Moq;
 using mArI.Services;
-using mArI.Models;
-using System.Diagnostics;
+using System.Xml;
 
-Stopwatch sw = new();
 
-string assistantInstructionsNicknames = "You are an assistant which helps determine if two names are nicknames of one another. I will provide to you two names, split by a pipe character (|), and you will return the word 'True' if you think they could refer to the same person, or 'False' if you do not think they would";
-string assistantInstructionsEmployers = "You are an assistant which helps determine if the two provided company names could refer to the same place of employment. Your purpose is to help reconcile differences between sources of informaiton; where someone said they worked, and where official IRS documentation says they worked. For example, some people say they worked at Olive Garden, but the official owner of Olive Garden is Darden Restaurants. You should consider that, and all similar scenarios a match. I will provide to you two employer names, split by a pipe character (|), and you will return the word 'True' if you think they could refer to the same place of employment, or 'False' if you do not think they would";
-string assistantInstructionsProvided = Console.ReadLine();
 
-sw.Start();
 ColorConsole.WriteLine("Setup Phase", fgColor: ConsoleColor.Blue);
 var testClient = new HttpClient();
 var openAiApiKey = File.ReadAllText(@"/Users/benjaminpinter/ApiKey.txt").Trim(); //NOTE: DO NOT CHECK IN THE API KEY
@@ -26,246 +20,59 @@ OpenAiHttpService testServ = new(factoryMoq.Object);
 Government testGov = new(testServ);
 ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
 ColorConsole.WriteLine(" - Library Setup", fgColor: ConsoleColor.White);
+
+var question = Console.ReadLine();
 try
 {
-    await testGov.AddCommitteeMember("TestCommittee", [
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        },
-        new("gpt-4o")
-        {
-            Name = $"{Environment.MachineName}_{new Random().NextInt64(0, int.MaxValue)}",
-            Temperature = new Random().NextDouble(),
-            TopP = new Random().NextDouble(),
-            Instructions = assistantInstructionsEmployers
-        }
-    ]);
+    await testGov.GenerateCommittee("TestCommittee",
+    "You are an assistant for comparing two names, and determining" +
+    "\r\n whether they could refer to the same person. You will be presented with two names, separated by" +
+    "\r\n pipe characters. " +
+    "  1. If the names have similar first names, and a shared last name, they should match." +
+    "  2. If one of the names includes a middle name, but the other does not, ignore the middle name for matching." +
+    "  2. Take into consideration variations and nicknames for the first and middle name." +
+    "Return only 'true' or 'false' depending on if they could a varation of the same name for" +
+    "\r\n one another.",
+    10);
 
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Assistants Created", fgColor: ConsoleColor.White);
-
-    var members = testGov.TryGetCommittee("TestCommittee");
-    ColorConsole.WriteLine($"\t\t'TestCommittee'", fgColor: ConsoleColor.Magenta);
-    foreach (var member in members ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t\t{member.Id}\t[{member.Name}] - [{member.Temperature}|{member.TopP}]", fgColor: ConsoleColor.White);
-    }
-
-    var threads = await testGov.CreateThreads(testGov.GetRequiredThreadCount());
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Threads Created", fgColor: ConsoleColor.White);
-    foreach (var thread in threads ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{thread.Id}", fgColor: ConsoleColor.White);
-    }
-
-    List<Message<List<MessageContent>>> messages = new();
-    List<Task<Message<List<MessageContent>>>> messageCreationTasks = [];
-    foreach (OpenAiThread t in threads)
-    {
-        messageCreationTasks.Add(testGov.CreateMessage(t.Id, new()
-        {
-            Role = "user",
-            Content = assistantInstructionsProvided
-        }));
-    }
-    Task.WaitAll([.. messageCreationTasks]);
-    foreach (var createdMessage in messageCreationTasks)
-    {
-        messages.Add(createdMessage.Result);
-    }
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Messages Created", fgColor: ConsoleColor.White);
-    foreach (var message in messages ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{message.ThreadId}", fgColor: ConsoleColor.White);
-        ColorConsole.WriteLine($"\t\t  {message.Id} - [{message.Content.First().Text.Value}]", fgColor: ConsoleColor.White);
-    }
-
-    List<Run> runs = new();
-    List<Task<Run>> runCreationTasks = [];
-    List<string> usedAssistants = [];
-    //Just combine both committees for testing
-    foreach (Message<List<MessageContent>> m in messages)
-    {
-        var targetAssistant = members.First(x => !usedAssistants.Contains(x.Id));
-        usedAssistants.Add(targetAssistant.Id);
-        runCreationTasks.Add(testGov.CreateRun(m.ThreadId, targetAssistant.Id));
-    }
-    Task.WaitAll([.. runCreationTasks]);
-    foreach (var createdRun in runCreationTasks)
-    {
-        runs.Add(createdRun.Result);
-    }
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Runs Started", fgColor: ConsoleColor.White);
-    foreach (var run in runs ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{run.Id} - [{run.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(run.CreatedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
-    }
-
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Waiting for Runs to Complete", fgColor: ConsoleColor.White);
-    List<Task<Run>> pendingRuns = [];
-    foreach (var run in runs)
-    {
-        pendingRuns.Add(testGov.WaitForRunToComplete(run.ThreadId, run.Id));
-    }
-    Task.WaitAll([.. pendingRuns]);
-    foreach (var run in pendingRuns ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{run.Result.Id} - [{run.Result.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(run.Result.CompletedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
-    }
-
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Getting Messages Added by Committee Members", fgColor: ConsoleColor.White);
-    List<Task<RunStepList>> runStepListsTasks = [];
-    foreach (var run in runs)
-    {
-        runStepListsTasks.Add(testGov.GetRunSteps(run.ThreadId, run.Id));
-    }
-    Task.WaitAll([.. runStepListsTasks]);
-    foreach (var run in runStepListsTasks ?? [])
-    {
-        foreach (var step in run.Result.Steps)
-        {
-            ColorConsole.WriteLine($"\t\t{step.Id} - [{step.Status}] @ [{DateTimeOffset.FromUnixTimeSeconds(step.CompletedAt ?? long.MinValue).ToLocalTime()}]", fgColor: ConsoleColor.White);
-        }
-    }
-
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Getting Message Content", fgColor: ConsoleColor.White);
-    List<Task<Message<List<MessageContent>>>> aiMessages = [];
-    foreach (var aiMessage in runStepListsTasks)
-    {
-        foreach (var step in aiMessage.Result.Steps)
-        {
-            aiMessages.Add(testGov.GetMessage(step.ThreadId, step.StepDetails.MessageCreation.MessageId));
-        }
-    }
-    Task.WaitAll([.. aiMessages]);
-    foreach (var message in aiMessages ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{message.Result.Id} - [{message.Result.Status}]", fgColor: ConsoleColor.White);
-        foreach (var messageContent in message.Result.Content)
-        {
-            ColorConsole.WriteLine($"\t\t  {messageContent.Text.Value}", fgColor: ConsoleColor.White);
-        }
-    }
+    var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee",
+    question);
 
     Console.WriteLine();
+    ColorConsole.WriteLine("~Committee Results~", fgColor: ConsoleColor.Blue);
     Console.WriteLine();
-    ColorConsole.WriteLine(messages.First().Content.First().Text.Value, fgColor: ConsoleColor.Magenta);
-    foreach (var message in aiMessages ?? [])
+    ColorConsole.WriteLine($"Total Members: {committeeAnswer.Count}", fgColor: ConsoleColor.White);
+    Console.WriteLine();
+    ColorConsole.WriteLine($"Committee Setup: \r\nYou are an assistant for comparing two names, and determining" +
+    "\r\n whether they could refer to the same person. You will be presented with two names, separated by" +
+    "\r\n pipe characters. Return only 'true' or 'false' depending on if they could a varation of the same name for" +
+    "\r\n one another.", fgColor: ConsoleColor.White);
+    Console.WriteLine();
+    ColorConsole.WriteLine($"Committee Question: \r\n{question}", fgColor: ConsoleColor.White);
+    Console.WriteLine();
+    foreach (var answer in committeeAnswer)
     {
-        var thisAssistant = members.First(x => x.Id == message.Result.AssistantId);
-        foreach (var messageContent in message.Result.Content)
-        {
-            ColorConsole.WriteLine($"{thisAssistant.Name}-[{thisAssistant.Temperature.Value.ToString(".###")}|{thisAssistant.TopP.Value.ToString(".###")}]-{messageContent.Text.Value}", fgColor: ConsoleColor.White);
-        }
+        ColorConsole.WriteLine($"{answer.RunInfo.Id}", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"|_{answer.ThreadInfo.Id}", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}]", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"    |_{answer.Answer.Id}", fgColor: ConsoleColor.White);
+        ColorConsole.Write($"      |_", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"{answer.GetAnswerAsText()}", fgColor: ConsoleColor.Green);
     }
 
-    Console.WriteLine();
-    Console.WriteLine();
+    var answerGroupings = committeeAnswer.GroupBy(x => x.GetAnswerAsText());
 
-    sw.Stop();
     Console.WriteLine();
-    ColorConsole.Write("", fgColor: ConsoleColor.Yellow);
-    ColorConsole.WriteLine($"~Setup completed in [{sw.Elapsed.Milliseconds}ms]~", fgColor: ConsoleColor.Yellow);
-
-    sw.Reset();
-    sw.Start();
-    ColorConsole.WriteLine("Teardown Phase", fgColor: ConsoleColor.Blue);
-
-    List<DeleteMessageResponse> destroyedMessages = [];
-    List<Task<DeleteMessageResponse>> destroyedMessageRequests = [];
-    foreach (var m in messages)
+    ColorConsole.WriteLine("~Result~", fgColor: ConsoleColor.Blue);
+    foreach (var group in answerGroupings)
     {
-        destroyedMessageRequests.Add(testGov.DestroyMessage(m.ThreadId, m.Id));
-    }
-    Task.WaitAll([.. destroyedMessageRequests]);
-    foreach (var destroyedMessage in destroyedMessageRequests)
-    {
-        destroyedMessages.Add(destroyedMessage.Result);
-    }
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Messages Destroyed", fgColor: ConsoleColor.White);
-    foreach (var message in destroyedMessages ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{message.Id} - {message.Deleted}", fgColor: ConsoleColor.White);
+        ColorConsole.Write($"{group.Key} - ", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"{group.Count()}", fgColor: ConsoleColor.Cyan);
     }
 
-    var deletedThreads = await testGov.DestroyThreads([.. threads.Select(x => x.Id)]);
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Threads Destroyed", fgColor: ConsoleColor.White);
-    foreach (var thread in deletedThreads ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{thread.Id} - {thread.Deleted}", fgColor: ConsoleColor.White);
-    }
+    await testGov.DestroyAssistants();
 
-    var destroyResults = await testGov.DestroyAssistants();
-    ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
-    ColorConsole.WriteLine(" - Assistants destroyed", fgColor: ConsoleColor.White);
-    foreach (var r in destroyResults ?? [])
-    {
-        ColorConsole.WriteLine($"\t\t{r.Id} - {r.Deleted}", fgColor: ConsoleColor.White);
-    }
-    Console.WriteLine();
-    ColorConsole.WriteLine($"~Teardown completed in [{sw.Elapsed.Milliseconds}ms]~", fgColor: ConsoleColor.Yellow);
-    Console.WriteLine();
+
 }
 catch (Exception e)
 {

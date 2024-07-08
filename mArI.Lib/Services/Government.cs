@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using mArI.Models;
 
 namespace mArI.Services;
@@ -5,6 +6,8 @@ namespace mArI.Services;
 public class Government
 {
     private OpenAiHttpService openAiHttpService { get; set; }
+
+    //NOTE: Should Committees be objects?
     private Dictionary<string, List<Assistant>> Committees { get; set; }
 
     public Government(OpenAiHttpService httpService)
@@ -13,7 +16,113 @@ public class Government
         openAiHttpService = httpService;
     }
 
-    public async Task<List<Assistant>> AddCommitteeMember(string committeeName, params Assistant[] assistants)
+    public async Task<List<Assistant>> GenerateCommittee(
+        string committeeName,
+        string instructions,
+        int committeeSize,
+        double minTopP = 0.00,
+        double maxTopP = 0.99,
+        double minTemp = 0.00,
+        double maxTemp = 0.99)
+    {
+        List<Assistant> assistants = [];
+
+        //Pre-configure all the assistants in memory
+        for (int i = 0; i < committeeSize; i++)
+        {
+            assistants.Add(new("gpt-4o")
+            {
+                TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
+                Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
+                Name = $"{Environment.MachineName}_{i.ToString("###")}",
+                Instructions = instructions
+            });
+        }
+
+        //Create in parallel
+        return await AddCommitteeMember(committeeName, [.. assistants]);
+    }
+
+    public async Task<List<CommitteeAnswer>> AskQuestionToCommittee(string committeeName, string question)
+    {
+        var members = TryGetCommittee(committeeName);
+        var threads = await CreateThreads(GetRequiredThreadCount());
+
+        List<Message<List<MessageContent>>> messages = new();
+        List<Task<Message<List<MessageContent>>>> messageCreationTasks = [];
+        foreach (OpenAiThread t in threads)
+        {
+            messageCreationTasks.Add(CreateMessage(t.Id, new()
+            {
+                Role = "user",
+                Content = question
+            }));
+        }
+        Task.WaitAll([.. messageCreationTasks]);
+        foreach (var createdMessage in messageCreationTasks)
+        {
+            messages.Add(createdMessage.Result);
+        }
+
+        List<Run> runs = new();
+        List<Task<Run>> runCreationTasks = [];
+        List<string> usedAssistants = [];
+        foreach (Message<List<MessageContent>> m in messages)
+        {
+            var targetAssistant = members.First(x => !usedAssistants.Contains(x.Id));
+            usedAssistants.Add(targetAssistant.Id);
+            runCreationTasks.Add(CreateRun(m.ThreadId, targetAssistant.Id));
+        }
+        Task.WaitAll([.. runCreationTasks]);
+        foreach (var createdRun in runCreationTasks)
+        {
+            runs.Add(createdRun.Result);
+        }
+
+        List<Task<Run>> pendingRuns = [];
+        foreach (var run in runs)
+        {
+            pendingRuns.Add(WaitForRunToComplete(run.ThreadId, run.Id));
+        }
+        Task.WaitAll([.. pendingRuns]);
+
+        List<Task<RunStepList>> runStepListsTasks = [];
+        foreach (var run in runs)
+        {
+            runStepListsTasks.Add(GetRunSteps(run.ThreadId, run.Id));
+        }
+        Task.WaitAll([.. runStepListsTasks]);
+
+        List<Task<Message<List<MessageContent>>>> aiMessages = [];
+        foreach (var aiMessage in runStepListsTasks)
+        {
+            foreach (var step in aiMessage.Result.Steps)
+            {
+                aiMessages.Add(GetMessage(step.ThreadId, step.StepDetails.MessageCreation.MessageId));
+            }
+        }
+        Task.WaitAll([.. aiMessages]);
+
+        List<CommitteeAnswer> answers = [];
+        foreach (var answer in aiMessages)
+        {
+            var targetThread = threads.Where(x => x.Id == answer.Result.ThreadId).First();
+            var targetRun = runs.Where(x => x.Id == answer.Result.RunId).First();
+            var targetAssistant = members.Where(x => x.Id == answer.Result.AssistantId).First();
+
+            answers.Add(new()
+            {
+                Answer = answer.Result,
+                ThreadInfo = targetThread,
+                RunInfo = targetRun,
+                AssistantInfo = targetAssistant
+            });
+        }
+
+        return answers;
+    }
+
+    private async Task<List<Assistant>> AddCommitteeMember(string committeeName, params Assistant[] assistants)
     {
         InitializeCommitteeInDict(committeeName);
         List<Task<Assistant>> assistantCreationTasks = [];
@@ -175,5 +284,13 @@ public class Government
         {
             Committees.Add(committeeName, [assist]);
         }
+    }
+
+    private static double GetPseudoDoubleWithinRange(double lowerBound, double upperBound)
+    {
+        var random = new Random();
+        var rDouble = random.NextDouble();
+        var rRangeDouble = rDouble * (upperBound - lowerBound) + lowerBound;
+        return rRangeDouble;
     }
 }
