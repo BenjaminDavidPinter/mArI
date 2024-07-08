@@ -9,20 +9,52 @@ public class Government
 
     //NOTE: Should Committees be objects?
     private Dictionary<string, List<Assistant>> Committees { get; set; }
-    private List<FileUploadResult> Files { get; set; }
+    private Dictionary<string, List<FileUploadResult>> CommitteeFiles { get; set; }
 
     public Government(OpenAiHttpService httpService)
     {
         Committees = [];
-        Files = [];
+        CommitteeFiles = [];
         openAiHttpService = httpService;
+    }
+
+    /// <summary>
+    /// Uploads a file to OpenAI, for Assistant vision.
+    /// </summary>
+    /// <param name="filesToUpload"></param>
+    /// <param name="owningCommittee"></param>
+    /// <returns>A list of all files associated with the given committee</returns>
+    public List<FileUploadResult> UploadFiles(List<byte[]> filesToUpload, string owningCommittee)
+    {
+        List<Task<FileUploadResult>> fileUploadTasks = [];
+
+        foreach (var fileToUpload in filesToUpload)
+        {
+            fileUploadTasks.Add(openAiHttpService.UploadFile(fileToUpload, $"{Guid.NewGuid()}.jpg"));
+        }
+
+
+        Task.WaitAll([.. fileUploadTasks]);
+
+        foreach (var uploadedFileResult in fileUploadTasks)
+        {
+            if (CommitteeFiles.ContainsKey(owningCommittee))
+            {
+                CommitteeFiles[owningCommittee].Add(uploadedFileResult.Result);
+            }
+            else
+            {
+                CommitteeFiles.Add(owningCommittee, [uploadedFileResult.Result]);
+            }
+        }
+
+        return CommitteeFiles[owningCommittee];
     }
 
     public async Task<List<Assistant>> GenerateCommittee(
         string committeeName,
         string[] instructions,
         int committeeSize,
-        List<byte[]> files = null!,
         double minTopP = 0.00,
         double maxTopP = 0.99,
         double minTemp = 0.00,
@@ -34,15 +66,6 @@ public class Government
         //Split all incoming prompts as evenly as possible
         var totalInstructions = instructions.Count();
         int assistantSplit = committeeSize / totalInstructions;
-
-        List<Task<FileUploadResult>> fileUploadTasks = [];
-        if (files != null)
-        {
-            foreach (var fileToUpload in files)
-            {
-                fileUploadTasks.Add(openAiHttpService.UploadFile(fileToUpload, $"{Guid.NewGuid()}.jpg"));
-            }
-        }
 
         for (int j = 0; j < instructions.Count(); j++)
         {
@@ -69,25 +92,23 @@ public class Government
             });
         }
 
-        //Create in parallel
-        Task.WaitAll([.. fileUploadTasks]);
-        Files.AddRange(fileUploadTasks.Select(x => x.Result));
         return await AddCommitteeMember(committeeName, [.. assistants]);
     }
 
     public async Task<List<CommitteeAnswer>> AskQuestionToCommittee(string committeeName, string question)
     {
         var members = TryGetCommittee(committeeName);
+        var files = CommitteeFiles[committeeName];
         var threads = await CreateThreads(members.Count);
 
         List<Message<List<object>>> messages = new();
         List<Task<Message<List<object>>>> messageCreationTasks = [];
         foreach (OpenAiThread t in threads)
         {
-            if (Files != null && Files.Count() != 0)
+            if (files != null && files.Count() != 0)
             {
                 List<ImageFile> filesToUpload = [];
-                foreach (var file in Files)
+                foreach (var file in files)
                 {
                     filesToUpload.Add(new ImageFile() { Type = "image_file", FileDetails = new() { FileId = file.Id, Detail = "high" } });
                 }
@@ -275,7 +296,7 @@ public class Government
         }
     }
 
-    public async Task<List<DeleteAssistantResponse>> DestroyAssistants()
+    public async Task DestroyAssistants()
     {
         List<DeleteAssistantResponse> responses = new();
         List<Task<DeleteAssistantResponse>> deletionRequests = [];
@@ -288,22 +309,23 @@ public class Government
             }
         }
 
-        foreach(var file in Files) 
+        foreach (var key in CommitteeFiles.Keys)
         {
-            fileDeletionRequests.Add(openAiHttpService.DeleteFile(file.Id));
+            foreach (var file in CommitteeFiles[key])
+            {
+                fileDeletionRequests.Add(openAiHttpService.DeleteFile(file.Id));
+            }
         }
 
-        Files.Clear();
+        CommitteeFiles.Clear();
         Committees.Clear();
 
-        Task.WaitAll([.. deletionRequests,..fileDeletionRequests]);
+        Task.WaitAll([.. deletionRequests, .. fileDeletionRequests]);
 
         foreach (var deletionRequest in deletionRequests)
         {
             responses.Add(deletionRequest.Result);
         }
-
-        return responses;
     }
 
     public async Task<Run> CreateRun(string threadId, string assistantId)

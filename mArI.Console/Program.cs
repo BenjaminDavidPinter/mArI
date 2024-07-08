@@ -7,7 +7,7 @@ using System.Xml;
 
 ColorConsole.WriteLine("Setup Phase", fgColor: ConsoleColor.Blue);
 var testClient = new HttpClient();
-var openAiApiKey = File.ReadAllText(@"C:\VS\ApiKey.txt").Trim(); //NOTE: DO NOT CHECK IN THE API KEY
+var openAiApiKey = File.ReadAllText(@"/Users/benjaminpinter/ApiKey.txt").Trim(); //NOTE: DO NOT CHECK IN THE API KEY
 testClient.BaseAddress = new("https://api.openai.com/v1/");
 testClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
 testClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
@@ -26,16 +26,14 @@ var question = Console.ReadLine();
 try
 {
 
-    await testGov.GenerateCommittee( 
+    await testGov.GenerateCommittee(
     //NOTE: Committee Name
     "TestCommittee",
     //NOTE: Committee Setup Prompt
     ["You are an assistant which inspects employment documents. Your specific job is to read the entire document, and determine for what year the document validates. Look for words like 'Check Date' or 'Begin'. In your reponse, only return the year, and absolutley no other text",
     "You are an assistant which inspects employment documents. Your job is to determine what year the document's information refers to. In your reponse, only return the year, and absolutley no other text."],
     //NOTE: Number of members of this committee
-    5,
-    [File.ReadAllBytes("C:\\users\\bpinter\\Desktop\\Test_Document.png"),
-    File.ReadAllBytes("C:\\users\\bpinter\\Desktop\\Annotation 2024-06-24 153549.png")]);
+    5);
 
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
 
@@ -50,7 +48,7 @@ try
     {
         ColorConsole.WriteLine($"{answer.RunInfo.Id}", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"|_{answer.ThreadInfo.Id}", fgColor: ConsoleColor.White);
-        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}] - [{string.Join("",answer.AssistantInfo.Instructions.Take(50))}]", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}] - [{string.Join("", answer.AssistantInfo.Instructions.Take(50))}]", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"    |_{answer.Answer.Id}", fgColor: ConsoleColor.White);
         ColorConsole.Write($"      |_", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"{answer.GetAnswerAsText()}", fgColor: ConsoleColor.Green);
