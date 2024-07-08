@@ -98,7 +98,7 @@ public class Government
     public async Task<List<CommitteeAnswer>> AskQuestionToCommittee(string committeeName, string question)
     {
         var members = TryGetCommittee(committeeName);
-        var files = CommitteeFiles[committeeName];
+        CommitteeFiles.TryGetValue(committeeName, out var files);
         var threads = await CreateThreads(members.Count);
 
         List<Message<List<object>>> messages = new();

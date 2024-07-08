@@ -20,7 +20,8 @@ OpenAiHttpService testServ = new(factoryMoq.Object);
 Government testGov = new(testServ);
 ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
 ColorConsole.WriteLine(" - Library Setup", fgColor: ConsoleColor.White);
-
+ColorConsole.Write("Committee Prompt: ", fgColor: ConsoleColor.Yellow);
+var prompt = Console.ReadLine();
 ColorConsole.Write("System Input: ", fgColor: ConsoleColor.Yellow);
 var question = Console.ReadLine();
 try
@@ -30,10 +31,9 @@ try
     //NOTE: Committee Name
     "TestCommittee",
     //NOTE: Committee Setup Prompt
-    ["You are an assistant which inspects employment documents. Your specific job is to read the entire document, and determine for what year the document validates. Look for words like 'Check Date' or 'Begin'. In your reponse, only return the year, and absolutley no other text",
-    "You are an assistant which inspects employment documents. Your job is to determine what year the document's information refers to. In your reponse, only return the year, and absolutley no other text."],
+    [prompt],
     //NOTE: Number of members of this committee
-    5);
+    3);
 
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
 
