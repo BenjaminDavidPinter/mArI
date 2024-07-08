@@ -18,7 +18,7 @@ public class Government
 
     public async Task<List<Assistant>> GenerateCommittee(
         string committeeName,
-        string instructions,
+        string[] instructions,
         int committeeSize,
         double minTopP = 0.00,
         double maxTopP = 0.99,
@@ -28,15 +28,35 @@ public class Government
         List<Assistant> assistants = [];
 
         //Pre-configure all the assistants in memory
-        for (int i = 0; i < committeeSize; i++)
+        //Split all incoming prompts as evenly as possible
+        var totalInstructions = instructions.Count();
+        int assistantSplit = committeeSize / totalInstructions;
+
+        foreach (var instruction in instructions)
         {
-            assistants.Add(new("gpt-4o")
+            for (int i = 0; i < assistantSplit; i++)
             {
-                TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
-                Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
-                Name = $"{Environment.MachineName}_{i.ToString("###")}",
-                Instructions = instructions
-            });
+                assistants.Add(new("gpt-4o")
+                {
+                    TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
+                    Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
+                    Name = $"{Environment.MachineName}_{i:0000}",
+                    Instructions = instruction
+                });
+            }
+        }
+
+        if(assistants.Count < committeeSize) {
+            for (int i = 0; i < assistantSplit; i++)
+            {
+                assistants.Add(new("gpt-4o")
+                {
+                    TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
+                    Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
+                    Name = $"{Environment.MachineName}_{i.ToString("###")}",
+                    Instructions = instructions[new Random().Next(0, instructions.Count())]
+                });
+            }
         }
 
         //Create in parallel
