@@ -11,7 +11,7 @@ public static class AddMariExtensions
     {
         servicesCollection.AddHttpClient("mArIOpenApiClientInternal", client =>
         {
-            client.BaseAddress = new("https://api.openai.com");
+            client.BaseAddress = new("https://api.openai.com/v1/");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
             client.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
         });

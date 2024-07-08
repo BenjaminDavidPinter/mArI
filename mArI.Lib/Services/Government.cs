@@ -78,7 +78,7 @@ public class Government
     public async Task<List<CommitteeAnswer>> AskQuestionToCommittee(string committeeName, string question)
     {
         var members = TryGetCommittee(committeeName);
-        var threads = await CreateThreads(GetRequiredThreadCount());
+        var threads = await CreateThreads(members.Count);
 
         List<Message<List<object>>> messages = new();
         List<Task<Message<List<object>>>> messageCreationTasks = [];
@@ -279,6 +279,7 @@ public class Government
     {
         List<DeleteAssistantResponse> responses = new();
         List<Task<DeleteAssistantResponse>> deletionRequests = [];
+        List<Task> fileDeletionRequests = [];
         foreach (var key in Committees.Keys)
         {
             foreach (var assist in Committees[key])
@@ -287,7 +288,15 @@ public class Government
             }
         }
 
-        Task.WaitAll([.. deletionRequests]);
+        foreach(var file in Files) 
+        {
+            fileDeletionRequests.Add(openAiHttpService.DeleteFile(file.Id));
+        }
+
+        Files.Clear();
+        Committees.Clear();
+
+        Task.WaitAll([.. deletionRequests,..fileDeletionRequests]);
 
         foreach (var deletionRequest in deletionRequests)
         {

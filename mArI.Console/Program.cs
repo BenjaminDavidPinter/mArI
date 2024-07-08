@@ -34,7 +34,8 @@ try
     "You are an assistant which inspects employment documents. Your job is to determine what year the document's information refers to. In your reponse, only return the year, and absolutley no other text."],
     //NOTE: Number of members of this committee
     5,
-    [File.ReadAllBytes("C:\\users\\bpinter\\Desktop\\Test_Document.png")]);
+    [File.ReadAllBytes("C:\\users\\bpinter\\Desktop\\Test_Document.png"),
+    File.ReadAllBytes("C:\\users\\bpinter\\Desktop\\Annotation 2024-06-24 153549.png")]);
 
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
 
