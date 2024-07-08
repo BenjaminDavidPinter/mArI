@@ -13,6 +13,7 @@ public static class AddMariExtensions
         {
             client.BaseAddress = new("https://api.openai.com");
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
+            client.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
         });
 
         servicesCollection.AddTransient<Government>();

@@ -5,9 +5,12 @@ namespace mArI.Models;
 
 public class ImageFile
 {
-    [JsonPropertyName("file_id")]
-    public string? FileId { get; set; }
+    [JsonPropertyName("image_file")]
+    public ImageFileDetail? FileDetails { get; set; }
     
     [JsonPropertyName("detail")]
     public string? Detail { get; set; }
+
+    [JsonPropertyName("type")]
+    public string? Type {get;set;}
 }

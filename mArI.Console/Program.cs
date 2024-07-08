@@ -21,34 +21,20 @@ Government testGov = new(testServ);
 ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
 ColorConsole.WriteLine(" - Library Setup", fgColor: ConsoleColor.White);
 
-ColorConsole.Write("Enter Two names split by a pipe: ", fgColor: ConsoleColor.Yellow);
+ColorConsole.Write("System Input: ", fgColor: ConsoleColor.Yellow);
 var question = Console.ReadLine();
 try
 {
 
-    await testGov.GenerateCommittee(
+    await testGov.GenerateCommittee( 
     //NOTE: Committee Name
     "TestCommittee",
     //NOTE: Committee Setup Prompt
-    ["You are an assistant for comparing two full names, and determining" +
-    "\r\n whether they could potentially refer to the same person. You will be presented with two full names, separated by" +
-    "\r\n pipe characters. " +
-    "\r\n  1. If the names have similar first names, and a shared last name, they should match." +
-    "\r\n  2. If one of the names includes a middle name, but the other does not, ignore the middle name for matching." +
-    "\r\n  2. Take into consideration variations and nicknames for the first and middle name." +
-    "\r\nReturn only 'true' or 'false' depending on if they could a varation of the same name for" +
-    "\r\n one another.",
-    //NOTE: Various flavors of prompt text
-    "You are an assistant for comparing two full persons names, and determining" +
-    "\r\n whether they refer to the same person. You will be presented with two full names, separated by" +
-    "\r\n pipe characters. " +
-    "\r\n  1. If the names have first names which are the same, or are nicknames of one another, and a shared last name, they should match." +
-    "\r\n  2. If one of the names includes a middle name, but the other does not, ignore the middle name for matching. If they both have a middle name, consider them in your decision" +
-    "\r\n  2. Take into consideration variations and nicknames for the first and middle name." +
-    "\r\nReturn only 'true' or 'false' depending on if they could a varation of the same name for" +
-    "\r\n one another."],
+    ["You are an assistant which inspects employment documents. Your specific job is to read the entire document, and determine for what year the document validates. Look for words like 'Check Date' or 'Begin'. In your reponse, only return the year, and absolutley no other text",
+    "You are an assistant which inspects employment documents. Your job is to determine what year the document's information refers to. In your reponse, only return the year, and absolutley no other text."],
     //NOTE: Number of members of this committee
-    20);
+    5,
+    [File.ReadAllBytes("C:\\users\\bpinter\\Desktop\\Test_Document.png")]);
 
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
 
@@ -56,11 +42,6 @@ try
     ColorConsole.WriteLine("~Committee Results~", fgColor: ConsoleColor.Blue);
     Console.WriteLine();
     ColorConsole.WriteLine($"Total Members: {committeeAnswer.Count}", fgColor: ConsoleColor.White);
-    Console.WriteLine();
-    ColorConsole.WriteLine($"Committee Setup: \r\nYou are an assistant for comparing two names, and determining" +
-    "\r\n whether they could refer to the same person. You will be presented with two names, separated by" +
-    "\r\n pipe characters. Return only 'true' or 'false' depending on if they could a varation of the same name for" +
-    "\r\n one another.", fgColor: ConsoleColor.White);
     Console.WriteLine();
     ColorConsole.WriteLine($"Committee Question: \r\n{question}", fgColor: ConsoleColor.White);
     Console.WriteLine();

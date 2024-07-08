@@ -89,7 +89,7 @@ public class OpenAiHttpService
         return await ProcessResultToObject<DeleteThreadResponse>(responseObject);
     }
 
-    public async Task<Message<List<MessageContent>>> CreateMessage<T>(string threadId, Message<T> message)
+    public async Task<Message<List<object>>> CreateMessage<T>(string threadId, Message<T> message)
     {
         var postContent = JsonContent.Create(message
             , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
@@ -99,7 +99,7 @@ public class OpenAiHttpService
             });
         var responseObject = await httpClient.PostAsync($"threads/{threadId}/messages", postContent);
 
-        return await ProcessResultToObject<Message<List<MessageContent>>>(responseObject);
+        return await ProcessResultToObject<Message<List<object>>>(responseObject);
     }
 
     public async Task<List<Message<MessageContent>>> ListMessages(string threadId)
@@ -227,6 +227,35 @@ public class OpenAiHttpService
         else
         {
             throw new Exception("Unable to deserialize result from Create Assistant");
+        }
+    }
+
+    public async Task<FileUploadResult> UploadFile(byte[] bytes, string fileName)
+    {
+        var content = new MultipartFormDataContent
+            {
+                { new StringContent("vision"), "purpose" },
+                { new ByteArrayContent(bytes), "file", fileName }
+            };
+
+        var response = await httpClient.PostAsync("files", content);
+
+        return await ProcessResultToObject<FileUploadResult>(response);
+    }
+
+    public async Task<(bool status, string description)> DeleteFile(string fileId)
+    {
+        var deleteFileUri = $"files/{fileId}";
+
+        var response = await httpClient.DeleteAsync(deleteFileUri);
+
+        if (response.IsSuccessStatusCode)
+        {
+            return (true, "File was deleted");
+        }
+        else
+        {
+            return (false, response.ReasonPhrase! ?? string.Empty);
         }
     }
 }

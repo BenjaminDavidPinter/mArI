@@ -9,10 +9,12 @@ public class Government
 
     //NOTE: Should Committees be objects?
     private Dictionary<string, List<Assistant>> Committees { get; set; }
+    private List<FileUploadResult> Files { get; set; }
 
     public Government(OpenAiHttpService httpService)
     {
-        Committees = new();
+        Committees = [];
+        Files = [];
         openAiHttpService = httpService;
     }
 
@@ -20,6 +22,7 @@ public class Government
         string committeeName,
         string[] instructions,
         int committeeSize,
+        List<byte[]> files = null!,
         double minTopP = 0.00,
         double maxTopP = 0.99,
         double minTemp = 0.00,
@@ -32,7 +35,16 @@ public class Government
         var totalInstructions = instructions.Count();
         int assistantSplit = committeeSize / totalInstructions;
 
-        foreach (var instruction in instructions)
+        List<Task<FileUploadResult>> fileUploadTasks = [];
+        if (files != null)
+        {
+            foreach (var fileToUpload in files)
+            {
+                fileUploadTasks.Add(openAiHttpService.UploadFile(fileToUpload, $"{Guid.NewGuid()}.jpg"));
+            }
+        }
+
+        for (int j = 0; j < instructions.Count(); j++)
         {
             for (int i = 0; i < assistantSplit; i++)
             {
@@ -40,26 +52,26 @@ public class Government
                 {
                     TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
                     Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
-                    Name = $"{Environment.MachineName}_{i:0000}",
-                    Instructions = instruction
+                    Name = $"{Environment.MachineName}_{j:00}_{i:0000}",
+                    Instructions = instructions[j]
                 });
             }
         }
 
-        if(assistants.Count < committeeSize) {
-            for (int i = 0; i < assistantSplit; i++)
+        if (assistants.Count < committeeSize)
+        {
+            assistants.Add(new("gpt-4o")
             {
-                assistants.Add(new("gpt-4o")
-                {
-                    TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
-                    Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
-                    Name = $"{Environment.MachineName}_{i.ToString("###")}",
-                    Instructions = instructions[new Random().Next(0, instructions.Count())]
-                });
-            }
+                TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
+                Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
+                Name = $"{Environment.MachineName}_S",
+                Instructions = instructions[new Random().Next(0, instructions.Count())]
+            });
         }
 
         //Create in parallel
+        Task.WaitAll([.. fileUploadTasks]);
+        Files.AddRange(fileUploadTasks.Select(x => x.Result));
         return await AddCommitteeMember(committeeName, [.. assistants]);
     }
 
@@ -68,15 +80,36 @@ public class Government
         var members = TryGetCommittee(committeeName);
         var threads = await CreateThreads(GetRequiredThreadCount());
 
-        List<Message<List<MessageContent>>> messages = new();
-        List<Task<Message<List<MessageContent>>>> messageCreationTasks = [];
+        List<Message<List<object>>> messages = new();
+        List<Task<Message<List<object>>>> messageCreationTasks = [];
         foreach (OpenAiThread t in threads)
         {
-            messageCreationTasks.Add(CreateMessage(t.Id, new()
+            if (Files != null && Files.Count() != 0)
             {
-                Role = "user",
-                Content = question
-            }));
+                List<ImageFile> filesToUpload = [];
+                foreach (var file in Files)
+                {
+                    filesToUpload.Add(new ImageFile() { Type = "image_file", FileDetails = new() { FileId = file.Id, Detail = "high" } });
+                }
+                Message<List<object>> message = new()
+                {
+                    Role = "user",
+                    Content = [
+                        new MessageText() {Type = "text", Text = question},
+                        ..filesToUpload
+                    ]
+                };
+                messageCreationTasks.Add(CreateMessageWithFile(t.Id, message));
+            }
+            else
+            {
+                Message<string> message = new()
+                {
+                    Role = "user",
+                    Content = question
+                };
+                messageCreationTasks.Add(CreateMessage(t.Id, message));
+            }
         }
         Task.WaitAll([.. messageCreationTasks]);
         foreach (var createdMessage in messageCreationTasks)
@@ -87,7 +120,7 @@ public class Government
         List<Run> runs = new();
         List<Task<Run>> runCreationTasks = [];
         List<string> usedAssistants = [];
-        foreach (Message<List<MessageContent>> m in messages)
+        foreach (Message<List<object>> m in messages)
         {
             var targetAssistant = members.First(x => !usedAssistants.Contains(x.Id));
             usedAssistants.Add(targetAssistant.Id);
@@ -210,7 +243,12 @@ public class Government
         return responses;
     }
 
-    public async Task<Message<List<MessageContent>>> CreateMessage(string threadId, Message<string> message)
+    public async Task<Message<List<object>>> CreateMessage(string threadId, Message<string> message)
+    {
+        return await openAiHttpService.CreateMessage(threadId, message);
+    }
+
+    public async Task<Message<List<object>>> CreateMessageWithFile(string threadId, Message<List<object>> message)
     {
         return await openAiHttpService.CreateMessage(threadId, message);
     }
