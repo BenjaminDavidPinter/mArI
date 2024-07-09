@@ -24,7 +24,7 @@ public class Government
     /// <param name="filesToUpload"></param>
     /// <param name="owningCommittee"></param>
     /// <returns>A list of all files associated with the given committee</returns>
-    public List<FileUploadResult> UploadFiles(string owningCommittee, List<byte[]> filesToUpload)
+    public void UploadFiles(List<string> owningCommittees, List<byte[]> filesToUpload)
     {
         List<Task<FileUploadResult>> fileUploadTasks = [];
 
@@ -38,17 +38,18 @@ public class Government
 
         foreach (var uploadedFileResult in fileUploadTasks)
         {
-            if (CommitteeFiles.ContainsKey(owningCommittee))
+            foreach (var owningCommittee in owningCommittees)
             {
-                CommitteeFiles[owningCommittee].Add(uploadedFileResult.Result);
-            }
-            else
-            {
-                CommitteeFiles.Add(owningCommittee, [uploadedFileResult.Result]);
+                if (CommitteeFiles.ContainsKey(owningCommittee))
+                {
+                    CommitteeFiles[owningCommittee].Add(uploadedFileResult.Result);
+                }
+                else
+                {
+                    CommitteeFiles.Add(owningCommittee, [uploadedFileResult.Result]);
+                }
             }
         }
-
-        return CommitteeFiles[owningCommittee];
     }
 
     /// <summary>
