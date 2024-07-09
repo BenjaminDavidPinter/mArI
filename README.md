@@ -1,3 +1,6 @@
+# mArI
+### The AI Committee Framework
+
 Early Stages Example Debug Output
 
 ```

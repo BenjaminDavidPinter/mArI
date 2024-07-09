@@ -27,13 +27,7 @@ var question = Console.ReadLine();
 try
 {
 
-    await testGov.GenerateCommittee(
-    //NOTE: Committee Name
-    "TestCommittee",
-    //NOTE: Committee Setup Prompt
-    [prompt],
-    //NOTE: Number of members of this committee
-    3);
+    await testGov.GenerateCommittee("TestCommittee", "gpt-4o", [prompt], 3);
 
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
 
@@ -64,7 +58,7 @@ try
         ColorConsole.WriteLine($"{group.Count()}", fgColor: ConsoleColor.Cyan);
     }
 
-    await testGov.DestroyAssistants();
+    await testGov.Destroy();
 
 
 }

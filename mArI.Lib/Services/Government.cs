@@ -24,7 +24,7 @@ public class Government
     /// <param name="filesToUpload"></param>
     /// <param name="owningCommittee"></param>
     /// <returns>A list of all files associated with the given committee</returns>
-    public List<FileUploadResult> UploadFiles(List<byte[]> filesToUpload, string owningCommittee)
+    public List<FileUploadResult> UploadFiles(string owningCommittee, List<byte[]> filesToUpload)
     {
         List<Task<FileUploadResult>> fileUploadTasks = [];
 
@@ -51,8 +51,21 @@ public class Government
         return CommitteeFiles[owningCommittee];
     }
 
+    /// <summary>
+    /// Create a committee
+    /// </summary>
+    /// <param name="committeeName"></param>
+    /// <param name="model"></param>
+    /// <param name="instructions"></param>
+    /// <param name="committeeSize"></param>
+    /// <param name="minTopP"></param>
+    /// <param name="maxTopP"></param>
+    /// <param name="minTemp"></param>
+    /// <param name="maxTemp"></param>
+    /// <returns>A list containing a reference to each member of the committee</returns>
     public async Task<List<Assistant>> GenerateCommittee(
         string committeeName,
+        string model,
         string[] instructions,
         int committeeSize,
         double minTopP = 0.00,
@@ -71,7 +84,7 @@ public class Government
         {
             for (int i = 0; i < assistantSplit; i++)
             {
-                assistants.Add(new("gpt-4o")
+                assistants.Add(new(model)
                 {
                     TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
                     Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
@@ -83,7 +96,7 @@ public class Government
 
         if (assistants.Count < committeeSize)
         {
-            assistants.Add(new("gpt-4o")
+            assistants.Add(new(model)
             {
                 TopP = GetPseudoDoubleWithinRange(minTopP, maxTopP),
                 Temperature = GetPseudoDoubleWithinRange(minTemp, maxTemp),
@@ -101,7 +114,6 @@ public class Government
         CommitteeFiles.TryGetValue(committeeName, out var files);
         var threads = await CreateThreads(members.Count);
 
-        List<Message<List<object>>> messages = new();
         List<Task<Message<List<object>>>> messageCreationTasks = [];
         foreach (OpenAiThread t in threads)
         {
@@ -133,6 +145,7 @@ public class Government
             }
         }
         Task.WaitAll([.. messageCreationTasks]);
+        List<Message<List<object>>> messages = new();
         foreach (var createdMessage in messageCreationTasks)
         {
             messages.Add(createdMessage.Result);
@@ -215,17 +228,6 @@ public class Government
         return Committees[committeeName];
     }
 
-    public int GetRequiredThreadCount()
-    {
-        int total = 0;
-        foreach (var key in Committees.Keys)
-        {
-            total += Committees[key].Count;
-        }
-
-        return total;
-    }
-
     public async Task<List<OpenAiThread>> CreateThreads(int count)
     {
         List<OpenAiThread> threads = [];
@@ -296,7 +298,7 @@ public class Government
         }
     }
 
-    public async Task DestroyAssistants()
+    public async Task Destroy()
     {
         List<DeleteAssistantResponse> responses = new();
         List<Task<DeleteAssistantResponse>> deletionRequests = [];
