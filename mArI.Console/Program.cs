@@ -6,7 +6,7 @@ using mArI.Services;
 
 ColorConsole.WriteLine("Setup Phase", fgColor: ConsoleColor.Blue);
 var testClient = new HttpClient();
-var openAiApiKey = File.ReadAllText(@"C:\vs\\ApiKey.txt").Trim();
+var openAiApiKey = File.ReadAllText(@"/Users/benjaminpinter/ApiKey.txt").Trim();
 testClient.BaseAddress = new("https://api.openai.com/v1/");
 testClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
 testClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
