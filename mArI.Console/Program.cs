@@ -6,7 +6,7 @@ using mArI.Services;
 
 ColorConsole.WriteLine("Setup Phase", fgColor: ConsoleColor.Blue);
 var testClient = new HttpClient();
-var openAiApiKey = File.ReadAllText(@"/Users/benjaminpinter/ApiKey.txt").Trim();
+var openAiApiKey = File.ReadAllText(@"/Users/benjaminpinter/apikey.txt").Trim();
 testClient.BaseAddress = new("https://api.openai.com/v1/");
 testClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
 testClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
@@ -24,6 +24,10 @@ var assistantCleanup = await testGov.DestroyAllAssistants();
 ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
 ColorConsole.WriteLine($" - Stranded Assistants Destroyed ({assistantCleanup})", fgColor: ConsoleColor.White);
 
+var fileCleanup = await testGov.DestroyAllFiles();
+ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
+ColorConsole.WriteLine($" - Stranded Files Destroyed ({fileCleanup})", fgColor: ConsoleColor.White);
+
 
 ColorConsole.Write("Committee Prompt: ", fgColor: ConsoleColor.Yellow);
 var prompt = Console.ReadLine();
@@ -32,7 +36,7 @@ var question = Console.ReadLine();
 try
 {
     await testGov.GenerateCommittee("TestCommittee", "gpt-4o", [prompt], 21);
-    testGov.UploadFiles(["TestCommittee"], new(){File.ReadAllBytes(@"C:\Users\bpinter\Downloads\TestDoc.png")});
+    testGov.UploadFiles(["TestCommittee"], new() { File.ReadAllBytes(@"C:\Users\bpinter\Downloads\TestDoc.png") });
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
     Console.WriteLine();
     ColorConsole.WriteLine("~Committee Results~", fgColor: ConsoleColor.Blue);
@@ -45,7 +49,7 @@ try
     {
         ColorConsole.WriteLine($"{answer.RunInfo.Id}", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"|_{answer.ThreadInfo.Id}", fgColor: ConsoleColor.White);
-        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}] -" + 
+        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}] -" +
             $"[{string.Join("", answer.AssistantInfo.Instructions.Take(50))}]", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"    |_{answer.Answer.Id}", fgColor: ConsoleColor.White);
         ColorConsole.Write($"      |_", fgColor: ConsoleColor.White);

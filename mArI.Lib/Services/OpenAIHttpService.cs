@@ -231,7 +231,7 @@ public class OpenAiHttpService
         }
     }
 
-    public async Task<FileUploadResult> UploadFile(byte[] bytes, string fileName)
+    public async Task<OpenAiFile> UploadFile(byte[] bytes, string fileName)
     {
         var content = new MultipartFormDataContent
             {
@@ -241,7 +241,7 @@ public class OpenAiHttpService
 
         var response = await httpClient.PostAsync("files", content);
 
-        return await ProcessResultToObject<FileUploadResult>(response);
+        return await ProcessResultToObject<OpenAiFile>(response);
     }
 
     public async Task<(bool status, string description)> DeleteFile(string fileId)
@@ -258,5 +258,14 @@ public class OpenAiHttpService
         {
             return (false, response.ReasonPhrase! ?? string.Empty);
         }
+    }
+
+    public async Task<ListFilesResponse> ListFiles()
+    {
+        var listFilesUrl = "files";
+
+        var response = await httpClient.GetAsync(listFilesUrl);
+
+        return await ProcessResultToObject<ListFilesResponse>(response);
     }
 }

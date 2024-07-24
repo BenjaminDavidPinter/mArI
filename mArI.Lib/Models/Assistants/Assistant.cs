@@ -4,11 +4,12 @@ namespace mArI.Models;
 
 public class Assistant
 {
-    public Assistant(string model){
+    public Assistant(string model)
+    {
         Model = model;
     }
-    
-    
+
+
     [JsonPropertyName("id")]
     public string Id { get; set; }
 
@@ -20,7 +21,7 @@ public class Assistant
 
     [JsonPropertyName("name")]
     public string Name { get; set; }
-    
+
     [JsonPropertyName("description")]
     public string Description { get; set; }
 
@@ -45,6 +46,10 @@ public class Assistant
     [JsonPropertyName("top_p")]
     public double? TopP { get; set; }
 
+    //TODO: This needs to act like a union, it can 
+    //      be either a string, or an object
+    //      I know I've got code around here
+    //      somewhere for that
     [JsonPropertyName("response_format")]
     public string ResponseFormat { get; set; }
 }
