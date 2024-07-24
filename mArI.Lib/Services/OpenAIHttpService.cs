@@ -1,6 +1,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using mArI.Lib.Models;
 using mArI.Models;
 
 namespace mArI.Services;
@@ -25,11 +26,11 @@ public class OpenAiHttpService
         return await ProcessResultToObject<Assistant>(responseObject);
     }
 
-    public async Task<List<Assistant>> ListAssistants()
+    public async Task<ListAssistantsResponse> ListAssistants()
     {
         var responseObject = await httpClient.GetAsync("assistants");
 
-        return await ProcessResultToObject<List<Assistant>>(responseObject);
+        return await ProcessResultToObject<ListAssistantsResponse>(responseObject);
     }
 
     public async Task<Assistant> GetAssistant(string assistantId)

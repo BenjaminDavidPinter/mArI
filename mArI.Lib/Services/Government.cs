@@ -331,6 +331,35 @@ public class Government
         }
     }
 
+    public async Task<int> DestroyAllAssistants()
+    {
+        var allAssistants = await openAiHttpService.ListAssistants();
+        int totalDeletions = 0;
+        try
+        {
+            List<Task<DeleteAssistantResponse>> deletionRequests = [];
+            foreach (var assistant in allAssistants.Data ?? new())
+            {
+                deletionRequests.Add(openAiHttpService.DeleteAssistant(assistant.Id));
+                await Task.Delay(100);
+            }
+
+            Task.WaitAll([.. deletionRequests]);
+            totalDeletions += deletionRequests.Count(x => x.Result.Deleted);
+
+            if (allAssistants.HasMore)
+            {
+                totalDeletions += await DestroyAllAssistants();
+            }
+
+            return totalDeletions;
+        }
+        catch
+        {
+            return totalDeletions;
+        }
+    }
+
     public async Task<Run> CreateRun(string threadId, string assistantId)
     {
         return await openAiHttpService.CreateRun(threadId, assistantId);
@@ -346,7 +375,7 @@ public class Government
         && currentResult.Status != "requires_action"
         && currentResult.Status != "expired")
         {
-            await Task.Delay(100);
+            await Task.Delay(1000);
             currentResult = await openAiHttpService.GetRun(threadId, runId);
         }
 

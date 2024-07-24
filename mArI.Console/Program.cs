@@ -1,13 +1,12 @@
 ﻿using System.Net.Http.Headers;
 using Moq;
 using mArI.Services;
-using System.Xml;
 
 
 
 ColorConsole.WriteLine("Setup Phase", fgColor: ConsoleColor.Blue);
 var testClient = new HttpClient();
-var openAiApiKey = File.ReadAllText(@"/Users/benjaminpinter/ApiKey.txt").Trim(); //NOTE: DO NOT CHECK IN THE API KEY
+var openAiApiKey = File.ReadAllText(@"C:\vs\\ApiKey.txt").Trim();
 testClient.BaseAddress = new("https://api.openai.com/v1/");
 testClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
 testClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
@@ -20,17 +19,21 @@ OpenAiHttpService testServ = new(factoryMoq.Object);
 Government testGov = new(testServ);
 ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
 ColorConsole.WriteLine(" - Library Setup", fgColor: ConsoleColor.White);
+
+var assistantCleanup = await testGov.DestroyAllAssistants();
+ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
+ColorConsole.WriteLine($" - Stranded Assistants Destroyed ({assistantCleanup})", fgColor: ConsoleColor.White);
+
+
 ColorConsole.Write("Committee Prompt: ", fgColor: ConsoleColor.Yellow);
 var prompt = Console.ReadLine();
 ColorConsole.Write("System Input: ", fgColor: ConsoleColor.Yellow);
 var question = Console.ReadLine();
 try
 {
-
-    await testGov.GenerateCommittee("TestCommittee", "gpt-4o", [prompt], 3);
-
+    await testGov.GenerateCommittee("TestCommittee", "gpt-4o", [prompt], 21);
+    testGov.UploadFiles(["TestCommittee"], new(){File.ReadAllBytes(@"C:\Users\bpinter\Downloads\TestDoc.png")});
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
-
     Console.WriteLine();
     ColorConsole.WriteLine("~Committee Results~", fgColor: ConsoleColor.Blue);
     Console.WriteLine();
@@ -42,7 +45,8 @@ try
     {
         ColorConsole.WriteLine($"{answer.RunInfo.Id}", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"|_{answer.ThreadInfo.Id}", fgColor: ConsoleColor.White);
-        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}] - [{string.Join("", answer.AssistantInfo.Instructions.Take(50))}]", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}] -" + 
+            $"[{string.Join("", answer.AssistantInfo.Instructions.Take(50))}]", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"    |_{answer.Answer.Id}", fgColor: ConsoleColor.White);
         ColorConsole.Write($"      |_", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"{answer.GetAnswerAsText()}", fgColor: ConsoleColor.Green);
@@ -52,7 +56,9 @@ try
 
     Console.WriteLine();
     ColorConsole.WriteLine("~Result~", fgColor: ConsoleColor.Blue);
-    foreach (var group in answerGroupings)
+    Console.WriteLine();
+
+    foreach (var group in answerGroupings.OrderByDescending(x => x.Count()))
     {
         ColorConsole.Write($"{group.Key} - ", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"{group.Count()}", fgColor: ConsoleColor.Cyan);
