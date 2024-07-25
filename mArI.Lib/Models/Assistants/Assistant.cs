@@ -11,25 +11,25 @@ public class Assistant
 
 
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     [JsonPropertyName("object")]
-    public string Object { get; set; }
+    public string? Object { get; set; }
 
     [JsonPropertyName("created_at")]
-    public int? CreatedAt { get; set; }
+    public int CreatedAt { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
+    public string? Name { get; set; }
 
     [JsonPropertyName("description")]
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
     [JsonPropertyName("model")]
-    public string Model { get; set; }
+    public string? Model { get; set; }
 
     [JsonPropertyName("instructions")]
-    public string Instructions { get; set; }
+    public string? Instructions { get; set; }
 
     [JsonPropertyName("tools")]
     public List<Tool>? Tools { get; set; }
@@ -41,10 +41,10 @@ public class Assistant
     public Dictionary<string, string>? Metadata { get; set; }
 
     [JsonPropertyName("temperature")]
-    public double? Temperature { get; set; }
+    public double Temperature { get; set; }
 
     [JsonPropertyName("top_p")]
-    public double? TopP { get; set; }
+    public double TopP { get; set; }
 
     /*
     TODO: There is an issue with this property that I am unsure on how to solve; It 
