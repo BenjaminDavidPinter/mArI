@@ -35,8 +35,7 @@ ColorConsole.Write("System Input: ", fgColor: ConsoleColor.Yellow);
 var question = Console.ReadLine();
 try
 {
-    await testGov.GenerateCommittee("TestCommittee", "gpt-4o", [prompt], 21);
-    testGov.UploadFiles(["TestCommittee"], new() { File.ReadAllBytes(@"C:\Users\bpinter\Downloads\TestDoc.png") });
+    await testGov.GenerateCommittee("TestCommittee", "gpt-4o", [prompt], 100);
     var committeeAnswer = await testGov.AskQuestionToCommittee("TestCommittee", question);
     Console.WriteLine();
     ColorConsole.WriteLine("~Committee Results~", fgColor: ConsoleColor.Blue);

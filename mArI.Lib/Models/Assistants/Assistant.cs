@@ -46,10 +46,20 @@ public class Assistant
     [JsonPropertyName("top_p")]
     public double? TopP { get; set; }
 
-    //TODO: This needs to act like a union, it can 
-    //      be either a string, or an object
-    //      I know I've got code around here
-    //      somewhere for that
-    [JsonPropertyName("response_format")]
-    public string ResponseFormat { get; set; }
+    /*
+    TODO: There is an issue with this property that I am unsure on how to solve; It 
+    can either be a string or an object. This doesn't matter so much when we are 
+    creating assistants. The issue arises when we call ListAssistants.
+
+    Unlike other similar problems, like Message.cs, where we know the instances when
+    the Content property is either a string, or a more complex object, ListAssistants 
+    returns all assistants, whether they have the string version of this property, 
+    or the object type.
+
+    Therefore, when we initialize a backing store for the result of ListAssistants,
+    we cannot specify (at least to my current knowledge), that it can be 'either or'.
+    There's no instance of 'union' in C#, nor do I want to use Dynamic.
+    */
+    // [JsonPropertyName("response_format")]
+    // public string ResponseFormat { get; set; }
 }
