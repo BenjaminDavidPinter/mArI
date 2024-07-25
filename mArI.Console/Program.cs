@@ -30,9 +30,9 @@ ColorConsole.WriteLine($" - Stranded Files Destroyed ({fileCleanup})", fgColor: 
 
 
 ColorConsole.Write("Committee Prompt: ", fgColor: ConsoleColor.Yellow);
-var prompt = Console.ReadLine();
+var prompt = Console.ReadLine() ?? string.Empty;
 ColorConsole.Write("System Input: ", fgColor: ConsoleColor.Yellow);
-var question = Console.ReadLine();
+var question = Console.ReadLine() ?? string.Empty;
 try
 {
     await testGov.GenerateCommittee("TestCommittee", "gpt-4o", [prompt], 100);
