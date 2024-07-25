@@ -48,8 +48,8 @@ try
     {
         ColorConsole.WriteLine($"{answer.RunInfo.Id}", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"|_{answer.ThreadInfo.Id}", fgColor: ConsoleColor.White);
-        ColorConsole.WriteLine($"  |_{answer.AssistantInfo.Id} - [{answer.AssistantInfo.Name}] -" +
-            $"[{string.Join("", answer.AssistantInfo.Instructions.Take(50))}]", fgColor: ConsoleColor.White);
+        ColorConsole.WriteLine($"  |_{answer.AssistantInfo?.Id} - [{answer.AssistantInfo?.Name}] -" +
+            $"[{string.Join("", answer.AssistantInfo?.Instructions?.Take(50) ?? string.Empty)}]", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"    |_{answer.Answer.Id}", fgColor: ConsoleColor.White);
         ColorConsole.Write($"      |_", fgColor: ConsoleColor.White);
         ColorConsole.WriteLine($"{answer.GetAnswerAsText()}", fgColor: ConsoleColor.Green);
