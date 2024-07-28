@@ -14,6 +14,7 @@ public class OpenAiHttpService
         httpClient = httpClientFactory.CreateClient("mArIOpenApiClientInternal");
     }
 
+    #region Assistant
     public async Task<Assistant> CreateAssistant(Assistant createAssistantRequest)
     {
         var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create<Assistant>(createAssistantRequest
@@ -55,7 +56,9 @@ public class OpenAiHttpService
 
         return await ProcessResultToObject<DeleteAssistantResponse>(responseObject);
     }
+    #endregion
 
+    #region Thread
     public async Task<OpenAiThread> CreateThread()
     {
         var responseObject = await httpClient.PostAsync("threads", null);
@@ -89,7 +92,9 @@ public class OpenAiHttpService
 
         return await ProcessResultToObject<DeleteThreadResponse>(responseObject);
     }
+    #endregion
 
+    #region Message
     public async Task<Message<List<object>>> CreateMessage<T>(string threadId, Message<T> message)
     {
         var postContent = JsonContent.Create(message
@@ -132,7 +137,9 @@ public class OpenAiHttpService
 
         return await ProcessResultToObject<DeleteMessageResponse>(responseObject);
     }
+    #endregion
 
+    #region Run
     public async Task<Run> CreateRun(string threadId, string assistantId)
     {
         var responseObject = await httpClient.PostAsync($"threads/{threadId}/runs", JsonContent.Create(new
@@ -196,7 +203,9 @@ public class OpenAiHttpService
 
         throw new NotImplementedException();
     }
+    #endregion
 
+    #region RunStep
     public async Task<RunStepList> ListRunSteps(string threadId, string runId)
     {
         var responseObject = await httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps");
@@ -210,27 +219,9 @@ public class OpenAiHttpService
 
         throw new NotImplementedException();
     }
+    #endregion
 
-
-    private async Task<T> ProcessResultToObject<T>(HttpResponseMessage result)
-    {
-        if (!result.IsSuccessStatusCode)
-        {
-            throw new HttpRequestException($"{result.StatusCode} - {result.ReasonPhrase}");
-        }
-
-        var requestContent = await result.Content.ReadAsStringAsync();
-        var deserializedObject = JsonSerializer.Deserialize<T>(requestContent, JsonSerializerOptions.Default);
-        if (deserializedObject != null)
-        {
-            return deserializedObject;
-        }
-        else
-        {
-            throw new Exception("Unable to deserialize result from Create Assistant");
-        }
-    }
-
+    #region File
     public async Task<OpenAiFile> UploadFile(byte[] bytes, string fileName)
     {
         var content = new MultipartFormDataContent
@@ -268,4 +259,27 @@ public class OpenAiHttpService
 
         return await ProcessResultToObject<ListFilesResponse>(response);
     }
+    #endregion
+
+    #region Internal
+    private async Task<T> ProcessResultToObject<T>(HttpResponseMessage result)
+    {
+        if (!result.IsSuccessStatusCode)
+        {
+            var responseContent = await result.Content.ReadAsStringAsync();
+            throw new HttpRequestException($"{result.ReasonPhrase} - {responseContent}");
+        }
+
+        var requestContent = await result.Content.ReadAsStringAsync();
+        var deserializedObject = JsonSerializer.Deserialize<T>(requestContent, JsonSerializerOptions.Default);
+        if (deserializedObject != null)
+        {
+            return deserializedObject;
+        }
+        else
+        {
+            throw new Exception("Unable to deserialize result from Create Assistant");
+        }
+    }
+    #endregion
 }
