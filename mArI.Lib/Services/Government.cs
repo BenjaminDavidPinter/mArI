@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using mArI.Models;
+using Microsoft.VisualBasic;
 
 namespace mArI.Services;
 
@@ -9,7 +10,7 @@ public class Government
 
     //NOTE: Should Committees be objects?
     private Dictionary<string, List<Assistant>> Committees { get; set; }
-    private Dictionary<string, List<FileUploadResult>> CommitteeFiles { get; set; }
+    private Dictionary<string, List<OpenAiFile>> CommitteeFiles { get; set; }
 
     public Government(OpenAiHttpService httpService)
     {
@@ -26,7 +27,7 @@ public class Government
     /// <returns>A list of all files associated with the given committee</returns>
     public void UploadFiles(List<string> owningCommittees, List<byte[]> filesToUpload)
     {
-        List<Task<FileUploadResult>> fileUploadTasks = [];
+        List<Task<OpenAiFile>> fileUploadTasks = [];
 
         foreach (var fileToUpload in filesToUpload)
         {
@@ -109,9 +110,14 @@ public class Government
         return await AddCommitteeMember(committeeName, [.. assistants]);
     }
 
+    //TODO: Needs refactoring
     public async Task<List<CommitteeAnswer>> AskQuestionToCommittee(string committeeName, string question)
     {
-        var members = TryGetCommittee(committeeName);
+        if (!TryGetCommittee(committeeName, out var members))
+        {
+            throw new Exception($"Could not find committee '{committeeName}'");
+        }
+
         CommitteeFiles.TryGetValue(committeeName, out var files);
         var threads = await CreateThreads(members.Count);
 
@@ -157,7 +163,7 @@ public class Government
         List<string> usedAssistants = [];
         foreach (Message<List<object>> m in messages)
         {
-            var targetAssistant = members.First(x => !usedAssistants.Contains(x.Id));
+            var targetAssistant = members.First(x => !usedAssistants.Contains(x.Id ?? throw new Exception("Missing Id on OpenAI Object")));
             usedAssistants.Add(targetAssistant.Id);
             runCreationTasks.Add(CreateRun(m.ThreadId, targetAssistant.Id));
         }
@@ -287,16 +293,16 @@ public class Government
         return await openAiHttpService.DeleteMessage(threadId, messageId);
     }
 
-    public List<Assistant>? TryGetCommittee(string committeeName)
+    public bool TryGetCommittee(string committeeName, out List<Assistant> committee)
     {
         if (Committees.ContainsKey(committeeName))
         {
-            return Committees[committeeName];
+            committee = Committees[committeeName];
+            return true;
         }
-        else
-        {
-            return null!;
-        }
+
+        committee = [];
+        return false;
     }
 
     public async Task Destroy()
@@ -348,6 +354,35 @@ public class Government
             totalDeletions += deletionRequests.Count(x => x.Result.Deleted);
 
             if (allAssistants.HasMore)
+            {
+                totalDeletions += await DestroyAllAssistants();
+            }
+
+            return totalDeletions;
+        }
+        catch
+        {
+            return totalDeletions;
+        }
+    }
+
+    public async Task<int> DestroyAllFiles()
+    {
+        var allFiles = await openAiHttpService.ListFiles();
+        int totalDeletions = 0;
+        try
+        {
+            List<Task<(bool status, string description)>> deletionRequests = [];
+            foreach (var file in allFiles.Data ?? new())
+            {
+                deletionRequests.Add(openAiHttpService.DeleteFile(file.Id));
+                await Task.Delay(100);
+            }
+
+            Task.WaitAll([.. deletionRequests]);
+            totalDeletions += deletionRequests.Count(x => x.Result.status);
+
+            if (allFiles.HasMore)
             {
                 totalDeletions += await DestroyAllAssistants();
             }

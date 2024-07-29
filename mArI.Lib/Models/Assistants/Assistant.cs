@@ -1,34 +1,36 @@
+using System.Text.Json;
 using System.Text.Json.Serialization;
 
 namespace mArI.Models;
 
 public class Assistant
 {
-    public Assistant(string model){
+    public Assistant(string model)
+    {
         Model = model;
     }
-    
-    
+
+    #region OpenAI Type Definition
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     [JsonPropertyName("object")]
-    public string Object { get; set; }
+    public string? Object { get; set; }
 
     [JsonPropertyName("created_at")]
     public int? CreatedAt { get; set; }
 
     [JsonPropertyName("name")]
-    public string Name { get; set; }
-    
+    public string? Name { get; set; }
+
     [JsonPropertyName("description")]
-    public string Description { get; set; }
+    public string? Description { get; set; }
 
     [JsonPropertyName("model")]
     public string Model { get; set; }
 
     [JsonPropertyName("instructions")]
-    public string Instructions { get; set; }
+    public string? Instructions { get; set; }
 
     [JsonPropertyName("tools")]
     public List<Tool>? Tools { get; set; }
@@ -46,5 +48,27 @@ public class Assistant
     public double? TopP { get; set; }
 
     [JsonPropertyName("response_format")]
-    public string ResponseFormat { get; set; }
+    public object? ResponseFormat { get; set; }
+
+    #endregion
+
+    [JsonIgnore]
+    public string ResponseFormatAsString
+    {
+        get
+        {
+            return (string)ResponseFormat;
+        }
+    }
+
+    [JsonIgnore]
+    public ResponseFormat ResponseFormatAsObject
+    {
+        get
+        {
+            return JsonSerializer.Deserialize<ResponseFormat>(ResponseFormatAsString ?? "{}");
+        }
+    }
+
+
 }

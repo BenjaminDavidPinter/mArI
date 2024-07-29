@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace mArI.Models;
 
-public class FileUploadResult
+public class OpenAiFile
 {
     [JsonPropertyName("id")]
     public string Id { get; set; }

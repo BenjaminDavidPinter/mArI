@@ -1,6 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
+using System.Threading.RateLimiting;
 using mArI.Services;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace mArI.Extensions;
@@ -16,7 +19,16 @@ public static class AddMariExtensions
             client.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
             client.Timeout = Timeout.InfiniteTimeSpan;
         });
-
+        servicesCollection.AddRateLimiter(_ =>
+        _.AddTokenBucketLimiter(policyName: "Rate Limiter", options =>
+        {
+            options.TokenLimit = 50;
+            options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            options.QueueLimit = 10;
+            options.ReplenishmentPeriod = TimeSpan.FromSeconds(1);
+            options.TokensPerPeriod = 50;
+            options.AutoReplenishment = true;
+        }));
         servicesCollection.AddTransient<Government>();
         servicesCollection.AddTransient<OpenAiHttpService>();
     }
