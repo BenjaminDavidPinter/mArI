@@ -18,17 +18,12 @@ var options = new TokenBucketRateLimiterOptions
 };
 
 ColorConsole.WriteLine("Setup Phase", fgColor: ConsoleColor.Blue);
-var testClient = new HttpClient(handler: new ClientSideRateLimitedHandler(limiter: new TokenBucketRateLimiter(options)));
-var openAiApiKey = File.ReadAllText(@"/Users/benjaminpinter/apikey.txt").Trim();
-testClient.BaseAddress = new("https://api.openai.com/v1/");
-testClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
-testClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
+var openAiApiKey = File.ReadAllText(@"C:\vs\ApiKey.txt").Trim();
 var factoryMoq = new Mock<IHttpClientFactory>();
-factoryMoq.Setup(_ => _.CreateClient(It.IsAny<string>())).Returns(testClient);
+OpenAiHttpService testServ = new(openAiApiKey, 10);
+
 ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);
 ColorConsole.WriteLine(" - Moq Setup", fgColor: ConsoleColor.White);
-
-OpenAiHttpService testServ = new(factoryMoq.Object);
 
 var myAssistant = await testServ.CreateAssistant(new("gpt-4o"));
 ColorConsole.Write("\t\u221A", fgColor: ConsoleColor.Green);

@@ -1,17 +1,33 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading.RateLimiting;
 using mArI.Lib.Models;
 using mArI.Models;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace mArI.Services;
 
 public class OpenAiHttpService
 {
     private HttpClient httpClient { get; set; }
-    public OpenAiHttpService(IHttpClientFactory httpClientFactory)
+    public OpenAiHttpService(string apiKey, int maxRequestsPerSecond)
     {
-        httpClient = httpClientFactory.CreateClient("mArIOpenApiClientInternal");
+        var options = new TokenBucketRateLimiterOptions
+        {
+            TokenLimit = maxRequestsPerSecond,
+            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+            QueueLimit = 10,
+            ReplenishmentPeriod = TimeSpan.FromSeconds(1),
+            TokensPerPeriod = maxRequestsPerSecond,
+            AutoReplenishment = true
+        };
+        httpClient = new(handler: new ClientSideRateLimitedHandler(limiter: new TokenBucketRateLimiter(options)));
+        httpClient.BaseAddress = new("https://api.openai.com/v1/");
+        httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+        httpClient.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
+        httpClient.Timeout = Timeout.InfiniteTimeSpan;
     }
 
     #region Assistant

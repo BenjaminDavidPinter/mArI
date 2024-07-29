@@ -10,26 +10,11 @@ namespace mArI.Extensions;
 
 public static class AddMariExtensions
 {
-    public static void AddMari(this IServiceCollection servicesCollection, string openAiApiKey)
+    public static void AddMari(this IServiceCollection servicesCollection, 
+        string openAiApiKey, 
+        int maxRequestsPerSecond)
     {
-        servicesCollection.AddHttpClient("mArIOpenApiClientInternal", client =>
-        {
-            client.BaseAddress = new("https://api.openai.com/v1/");
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", openAiApiKey);
-            client.DefaultRequestHeaders.Add("OpenAI-Beta", "assistants=v2");
-            client.Timeout = Timeout.InfiniteTimeSpan;
-        });
-        servicesCollection.AddRateLimiter(_ =>
-        _.AddTokenBucketLimiter(policyName: "Rate Limiter", options =>
-        {
-            options.TokenLimit = 50;
-            options.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
-            options.QueueLimit = 10;
-            options.ReplenishmentPeriod = TimeSpan.FromSeconds(1);
-            options.TokensPerPeriod = 50;
-            options.AutoReplenishment = true;
-        }));
         servicesCollection.AddTransient<Government>();
-        servicesCollection.AddTransient<OpenAiHttpService>();
+        servicesCollection.AddSingleton(new OpenAiHttpService(openAiApiKey, maxRequestsPerSecond));
     }
 }
