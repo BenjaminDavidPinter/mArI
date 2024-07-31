@@ -1,12 +1,12 @@
 using System.Text.Json.Serialization;
 
-namespace mArI.Models;
+namespace mArI.Lib.Models;
 
-public class DeleteMessageResponse
+public class DeleteObjectResponse
 {
     [JsonPropertyName("id")]
     public string Id { get; set; }
-    
+
     [JsonPropertyName("object")]
     public string Object { get; set; }
 

@@ -1,4 +1,6 @@
 using System.ComponentModel;
+using mArI.Lib.Models;
+using mArI.Model;
 using mArI.Models;
 using Microsoft.VisualBasic;
 
@@ -31,7 +33,7 @@ public class Government
 
         foreach (var fileToUpload in filesToUpload)
         {
-            fileUploadTasks.Add(openAiHttpService.UploadFile(fileToUpload, $"{Guid.NewGuid()}.jpg"));
+            fileUploadTasks.Add(openAiHttpService.UploadFile(fileToUpload, $"{Guid.NewGuid()}.jpg", FilePurposes.Vision));
         }
 
 
@@ -254,10 +256,10 @@ public class Government
         return threads;
     }
 
-    public async Task<List<DeleteThreadResponse>> DestroyThreads(params string[] threadIds)
+    public async Task<List<DeleteObjectResponse>> DestroyThreads(params string[] threadIds)
     {
-        List<DeleteThreadResponse> responses = [];
-        List<Task<DeleteThreadResponse>> deleteThreadRequests = [];
+        List<DeleteObjectResponse> responses = [];
+        List<Task<DeleteObjectResponse>> deleteThreadRequests = [];
         foreach (var threadId in threadIds)
         {
             deleteThreadRequests.Add(openAiHttpService.DeleteThread(threadId));
@@ -288,7 +290,7 @@ public class Government
         return await openAiHttpService.GetMessage(threadId, messageId);
     }
 
-    public async Task<DeleteMessageResponse> DestroyMessage(string threadId, string messageId)
+    public async Task<DeleteObjectResponse> DestroyMessage(string threadId, string messageId)
     {
         return await openAiHttpService.DeleteMessage(threadId, messageId);
     }
@@ -307,8 +309,8 @@ public class Government
 
     public async Task Destroy()
     {
-        List<DeleteAssistantResponse> responses = new();
-        List<Task<DeleteAssistantResponse>> deletionRequests = [];
+        List<DeleteObjectResponse> responses = new();
+        List<Task<DeleteObjectResponse>> deletionRequests = [];
         List<Task> fileDeletionRequests = [];
         foreach (var key in Committees.Keys)
         {
@@ -343,7 +345,7 @@ public class Government
         int totalDeletions = 0;
         try
         {
-            List<Task<DeleteAssistantResponse>> deletionRequests = [];
+            List<Task<DeleteObjectResponse>> deletionRequests = [];
             foreach (var assistant in allAssistants.Data ?? new())
             {
                 deletionRequests.Add(openAiHttpService.DeleteAssistant(assistant.Id));

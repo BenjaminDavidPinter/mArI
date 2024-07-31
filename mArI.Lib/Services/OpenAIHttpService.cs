@@ -1,26 +1,31 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using mArI.Lib.Models;
+using mArI.Model;
 using mArI.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace mArI.Services;
 
 public class OpenAiHttpService
 {
     private HttpClient httpClient { get; set; }
-    public OpenAiHttpService(string apiKey, int maxRequestsPerSecond)
+    public OpenAiHttpService(string apiKey, int requestsPerMinute)
     {
+        var requestsPerSec = requestsPerMinute / 60;
         var options = new TokenBucketRateLimiterOptions
         {
-            TokenLimit = maxRequestsPerSecond,
+            TokenLimit = requestsPerSec,
             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
             QueueLimit = 10,
             ReplenishmentPeriod = TimeSpan.FromSeconds(1),
-            TokensPerPeriod = maxRequestsPerSecond,
+            TokensPerPeriod = requestsPerSec,
             AutoReplenishment = true
         };
         httpClient = new(handler: new ClientSideRateLimitedHandler(limiter: new TokenBucketRateLimiter(options)));
@@ -43,11 +48,11 @@ public class OpenAiHttpService
         return await ProcessResultToObject<Assistant>(responseObject);
     }
 
-    public async Task<ListAssistantsResponse> ListAssistants()
+    public async Task<ListObjectResponse<Assistant>> ListAssistants()
     {
         var responseObject = await httpClient.GetAsync("assistants");
 
-        return await ProcessResultToObject<ListAssistantsResponse>(responseObject);
+        return await ProcessResultToObject<ListObjectResponse<Assistant>>(responseObject);
     }
 
     public async Task<Assistant> GetAssistant(string assistantId)
@@ -66,11 +71,11 @@ public class OpenAiHttpService
         return await ProcessResultToObject<Assistant>(responseObject);
     }
 
-    public async Task<DeleteAssistantResponse> DeleteAssistant(string assistantId)
+    public async Task<DeleteObjectResponse> DeleteAssistant(string assistantId)
     {
         var responseObject = await httpClient.DeleteAsync($"assistants/{assistantId}");
 
-        return await ProcessResultToObject<DeleteAssistantResponse>(responseObject);
+        return await ProcessResultToObject<DeleteObjectResponse>(responseObject);
     }
     #endregion
 
@@ -97,16 +102,16 @@ public class OpenAiHttpService
             metadata = metaData
         }
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
-        , System.Text.Json.JsonSerializerOptions.Default));
+        , JsonSerializerOptions.Default));
 
         return await ProcessResultToObject<OpenAiThread>(responseObject);
     }
 
-    public async Task<DeleteThreadResponse> DeleteThread(string threadId)
+    public async Task<DeleteObjectResponse> DeleteThread(string threadId)
     {
         var responseObject = await httpClient.DeleteAsync($"threads/{threadId}");
 
-        return await ProcessResultToObject<DeleteThreadResponse>(responseObject);
+        return await ProcessResultToObject<DeleteObjectResponse>(responseObject);
     }
     #endregion
 
@@ -147,11 +152,11 @@ public class OpenAiHttpService
         throw new NotImplementedException();
     }
 
-    public async Task<DeleteMessageResponse> DeleteMessage(string threadId, string messageId)
+    public async Task<DeleteObjectResponse> DeleteMessage(string threadId, string messageId)
     {
         var responseObject = await httpClient.DeleteAsync($"threads/{threadId}/messages/{messageId}");
 
-        return await ProcessResultToObject<DeleteMessageResponse>(responseObject);
+        return await ProcessResultToObject<DeleteObjectResponse>(responseObject);
     }
     #endregion
 
@@ -238,19 +243,23 @@ public class OpenAiHttpService
     #endregion
 
     #region File
-    public async Task<OpenAiFile> UploadFile(byte[] bytes, string fileName)
+    public async Task<OpenAiFile> UploadFile(
+        byte[] bytes, 
+        string fileName,
+        string purpose)
     {
         var content = new MultipartFormDataContent
-            {
-                { new StringContent("vision"), "purpose" },
-                { new ByteArrayContent(bytes), "file", fileName }
-            };
+        {
+            { new StringContent(purpose), "purpose" },
+            { new ByteArrayContent(bytes), "file", fileName }
+        };
 
         var response = await httpClient.PostAsync("files", content);
 
         return await ProcessResultToObject<OpenAiFile>(response);
     }
 
+    //TODO: Turn this into a real result model
     public async Task<(bool status, string description)> DeleteFile(string fileId)
     {
         var deleteFileUri = $"files/{fileId}";
@@ -267,14 +276,111 @@ public class OpenAiHttpService
         }
     }
 
-    public async Task<ListFilesResponse> ListFiles()
+    public async Task<List<byte>> GetFileContent(string fileId)
+    {
+        var getFileContentUrl = $"files/{fileId}/content";
+        var response = await httpClient.GetAsync(getFileContentUrl);
+        return await ProcessResultToObject<List<byte>>(response);
+    }
+
+    public async Task<ListObjectResponse<OpenAiFile>> ListFiles()
     {
         var listFilesUrl = "files";
-
         var response = await httpClient.GetAsync(listFilesUrl);
-
-        return await ProcessResultToObject<ListFilesResponse>(response);
+        return await ProcessResultToObject<ListObjectResponse<OpenAiFile>>(response);
     }
+
+    public async Task<OpenAiFile> RetrieveFile(string fileId)
+    {
+        var listFilesUrl = $"files/{fileId}";
+        var response = await httpClient.GetAsync(listFilesUrl);
+        return await ProcessResultToObject<OpenAiFile>(response);
+    }
+    #endregion
+
+    #region Vector Stores
+    public async Task<VectorStore> CreateVectorStore(VectorStore storeToCreate)
+    {
+        string createVectorStoreUrl = "vector_stores";
+        var response = await httpClient.PostAsync(createVectorStoreUrl, JsonContent.Create(
+        storeToCreate
+        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }));
+        return await ProcessResultToObject<VectorStore>(response);
+    }
+
+    public async Task<ListObjectResponse<VectorStore>> ListVectorStores()
+    {
+        string listVectorStoreUrl = "vector_stores";
+        var response = await httpClient.GetAsync(listVectorStoreUrl);
+        return await ProcessResultToObject<ListObjectResponse<VectorStore>>(response);
+    }
+
+    public async Task<DeleteObjectResponse> DeleteVectorStore(string vectorStoreId)
+    {
+        string deleteVectorStoreUrl = $"vector_stores/{vectorStoreId}";
+        var response = await httpClient.DeleteAsync(deleteVectorStoreUrl);
+        return await ProcessResultToObject<DeleteObjectResponse>(response);
+    }
+
+    public async Task<VectorStore> GetVectorStore(string vectorStoreId)
+    {
+        string deleteVectorStoreUrl = $"vector_stores/{vectorStoreId}";
+        var response = await httpClient.GetAsync(deleteVectorStoreUrl);
+        return await ProcessResultToObject<VectorStore>(response);
+    }
+
+    public async Task<VectorStore> ModifyVectorStore(VectorStore store)
+    {
+        string createVectorStoreUrl = $"vector_stores/{store.Id}";
+        var response = await httpClient.PostAsync(createVectorStoreUrl, JsonContent.Create(
+        store
+        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }));
+        return await ProcessResultToObject<VectorStore>(response);
+    }
+    #endregion
+
+    #region Vector Store Files
+    public async Task<VectorStoreFile> CreateVectorStoreFile(string vectorStoreId, string fileId)
+    {
+        var endpoint = $"vector_stores/{vectorStoreId}/files";
+        //TODO: Should I make this an object? It's kind of small...
+        var response = await httpClient.PostAsync(endpoint, JsonContent.Create(
+        new
+        {
+            file_id = fileId
+        }
+        , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
+        , new() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }));
+        return await ProcessResultToObject<VectorStoreFile>(response);
+    }
+
+    public async Task<VectorStoreFile> RetrieveVectorStoreFile(string vectorStoreId, string fileId)
+    {
+        var endpoint = $"vector_stores/{vectorStoreId}/files/{fileId}";
+        //TODO: Should I make this an object? It's kind of small...
+        var response = await httpClient.GetAsync(endpoint);
+        return await ProcessResultToObject<VectorStoreFile>(response);
+    }
+
+    public async Task<ListObjectResponse<VectorStore>> ListVectorStoreFiles(string vectorStoreId)
+    {
+        var endpoint = $"vector_stores/{vectorStoreId}/files";
+        //TODO: Should I make this an object? It's kind of small...
+        var response = await httpClient.GetAsync(endpoint);
+        return await ProcessResultToObject<ListObjectResponse<VectorStore>>(response);
+    }
+
+    public async Task<DeleteObjectResponse> DeleteVectorStoreFile(string vectorStoreId, string fileId)
+    {
+        var endpoint = $"vector_stores/{vectorStoreId}/files/{fileId}";
+        //TODO: Should I make this an object? It's kind of small...
+        var response = await httpClient.DeleteAsync(endpoint);
+        return await ProcessResultToObject<DeleteObjectResponse>(response);
+    }
+
+
     #endregion
 
     #region Internal
@@ -285,7 +391,6 @@ public class OpenAiHttpService
             var responseContent = await result.Content.ReadAsStringAsync();
             throw new HttpRequestException($"{result.ReasonPhrase} - {responseContent}");
         }
-
         var requestContent = await result.Content.ReadAsStringAsync();
         var deserializedObject = JsonSerializer.Deserialize<T>(requestContent, JsonSerializerOptions.Default);
         if (deserializedObject != null)
