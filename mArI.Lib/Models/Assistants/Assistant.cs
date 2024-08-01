@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace mArI.Models;
 
-public class Assistant
+public class Assistant<ResponseFormatType>
 {
     public Assistant(string model)
     {
@@ -35,7 +35,7 @@ public class Assistant
     [JsonPropertyName("tools")]
     public List<Tool>? Tools { get; set; }
 
-    [JsonPropertyName("tool_resource")]
+    [JsonPropertyName("tool_resources")]
     public ToolResource? ToolResources { get; set; }
 
     [JsonPropertyName("metadata")]
@@ -48,27 +48,7 @@ public class Assistant
     public double? TopP { get; set; }
 
     [JsonPropertyName("response_format")]
-    public object? ResponseFormat { get; set; }
+    public ResponseFormatType? ResponseFormat { get; set; }
 
     #endregion
-
-    [JsonIgnore]
-    public string ResponseFormatAsString
-    {
-        get
-        {
-            return (string)ResponseFormat;
-        }
-    }
-
-    [JsonIgnore]
-    public ResponseFormat ResponseFormatAsObject
-    {
-        get
-        {
-            return JsonSerializer.Deserialize<ResponseFormat>(ResponseFormatAsString ?? "{}");
-        }
-    }
-
-
 }

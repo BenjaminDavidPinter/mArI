@@ -11,7 +11,7 @@ public class Government
     private OpenAiHttpService openAiHttpService { get; set; }
 
     //NOTE: Should Committees be objects?
-    private Dictionary<string, List<Assistant>> Committees { get; set; }
+    private Dictionary<string, List<Assistant<object>>> Committees { get; set; }
     private Dictionary<string, List<OpenAiFile>> CommitteeFiles { get; set; }
 
     public Government(OpenAiHttpService httpService)
@@ -67,7 +67,7 @@ public class Government
     /// <param name="minTemp"></param>
     /// <param name="maxTemp"></param>
     /// <returns>A list containing a reference to each member of the committee</returns>
-    public async Task<List<Assistant>> GenerateCommittee(
+    public async Task<List<Assistant<object>>> GenerateCommittee(
         string committeeName,
         string model,
         string[] instructions,
@@ -77,7 +77,7 @@ public class Government
         double minTemp = 0.00,
         double maxTemp = 0.99)
     {
-        List<Assistant> assistants = [];
+        List<Assistant<object>> assistants = [];
 
         //Pre-configure all the assistants in memory
         //Split all incoming prompts as evenly as possible
@@ -113,7 +113,7 @@ public class Government
     }
 
     //TODO: Needs refactoring
-    public async Task<List<CommitteeAnswer>> AskQuestionToCommittee(string committeeName, string question)
+    public async Task<List<CommitteeAnswer<object>>> AskQuestionToCommittee(string committeeName, string question)
     {
         if (!TryGetCommittee(committeeName, out var members))
         {
@@ -199,7 +199,7 @@ public class Government
         }
         Task.WaitAll([.. aiMessages]);
 
-        List<CommitteeAnswer> answers = [];
+        List<CommitteeAnswer<object>> answers = [];
         foreach (var answer in aiMessages)
         {
             var targetThread = threads.Where(x => x.Id == answer.Result.ThreadId).First();
@@ -218,10 +218,10 @@ public class Government
         return answers;
     }
 
-    private async Task<List<Assistant>> AddCommitteeMember(string committeeName, params Assistant[] assistants)
+    private async Task<List<Assistant<object>>> AddCommitteeMember(string committeeName, params Assistant<object>[] assistants)
     {
         InitializeCommitteeInDict(committeeName);
-        List<Task<Assistant>> assistantCreationTasks = [];
+        List<Task<Assistant<object>>> assistantCreationTasks = [];
         foreach (var assist in assistants)
         {
             assistantCreationTasks.Add(openAiHttpService.CreateAssistant(assist));
@@ -295,7 +295,7 @@ public class Government
         return await openAiHttpService.DeleteMessage(threadId, messageId);
     }
 
-    public bool TryGetCommittee(string committeeName, out List<Assistant> committee)
+    public bool TryGetCommittee(string committeeName, out List<Assistant<object>> committee)
     {
         if (Committees.ContainsKey(committeeName))
         {
@@ -341,7 +341,7 @@ public class Government
 
     public async Task<int> DestroyAllAssistants()
     {
-        var allAssistants = await openAiHttpService.ListAssistants();
+        var allAssistants = await openAiHttpService.ListAssistants<object>();
         int totalDeletions = 0;
         try
         {
@@ -432,7 +432,7 @@ public class Government
         }
     }
 
-    private void AddAssistantToCommittee(string committeeName, Assistant assist)
+    private void AddAssistantToCommittee(string committeeName, Assistant<object> assist)
     {
         if (Committees.ContainsKey(committeeName))
         {

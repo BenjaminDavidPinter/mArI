@@ -1,15 +1,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
-using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Threading.RateLimiting;
 using mArI.Lib.Models;
-using mArI.Model;
 using mArI.Models;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Options;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace mArI.Services;
 
@@ -36,39 +30,39 @@ public class OpenAiHttpService
     }
 
     #region Assistant
-    public async Task<Assistant> CreateAssistant(Assistant createAssistantRequest)
+    public async Task<Assistant<ResponseFormatType>> CreateAssistant<ResponseFormatType>(Assistant<ResponseFormatType> createAssistantRequest)
     {
-        var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create<Assistant>(createAssistantRequest
+        var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create<Assistant<ResponseFormatType>>(createAssistantRequest
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
         , new()
         {
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         }));
 
-        return await ProcessResultToObject<Assistant>(responseObject);
+        return await ProcessResultToObject<Assistant<ResponseFormatType>>(responseObject);
     }
 
-    public async Task<ListObjectResponse<Assistant>> ListAssistants()
+    public async Task<ListObjectResponse<Assistant<ResponseFormatType>>> ListAssistants<ResponseFormatType>()
     {
         var responseObject = await httpClient.GetAsync("assistants");
 
-        return await ProcessResultToObject<ListObjectResponse<Assistant>>(responseObject);
+        return await ProcessResultToObject<ListObjectResponse<Assistant<ResponseFormatType>>>(responseObject);
     }
 
-    public async Task<Assistant> GetAssistant(string assistantId)
+    public async Task<Assistant<ResponseFormatType>> GetAssistant<ResponseFormatType>(string assistantId)
     {
         var responseObject = await httpClient.GetAsync($"assistants/{assistantId}");
 
-        return await ProcessResultToObject<Assistant>(responseObject);
+        return await ProcessResultToObject<Assistant<ResponseFormatType>>(responseObject);
     }
 
-    public async Task<Assistant> ModifyAssistant(Assistant createAssistantRequest)
+    public async Task<Assistant<ResponseFormatType>> ModifyAssistant<ResponseFormatType>(Assistant<ResponseFormatType> createAssistantRequest)
     {
         var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create(createAssistantRequest
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
         , System.Text.Json.JsonSerializerOptions.Default));
 
-        return await ProcessResultToObject<Assistant>(responseObject);
+        return await ProcessResultToObject<Assistant<ResponseFormatType>>(responseObject);
     }
 
     public async Task<DeleteObjectResponse> DeleteAssistant(string assistantId)
@@ -403,4 +397,5 @@ public class OpenAiHttpService
         }
     }
     #endregion
+
 }

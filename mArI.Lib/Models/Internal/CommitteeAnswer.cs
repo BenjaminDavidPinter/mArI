@@ -1,8 +1,8 @@
 namespace mArI.Models;
 
-public class CommitteeAnswer
+public class CommitteeAnswer<T>
 {
-    public Assistant AssistantInfo { get; set; }
+    public Assistant<T> AssistantInfo { get; set; }
     public OpenAiThread ThreadInfo { get; set; }
     public Run RunInfo { get; set; }
     public Message<List<MessageContent>> Answer { get; set; }

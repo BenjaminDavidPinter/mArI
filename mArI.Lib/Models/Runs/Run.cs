@@ -85,5 +85,5 @@ public class Run
     public bool? ParallelToolCalls { get; set; }
 
     [JsonPropertyName("response_format")]
-    public string ResponseFormat { get; set; }
+    public ResponseFormat ResponseFormat { get; set; }
 }
