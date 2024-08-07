@@ -58,9 +58,12 @@ public class OpenAiHttpService
 
     public async Task<Assistant<ResponseFormatType>> ModifyAssistant<ResponseFormatType>(Assistant<ResponseFormatType> createAssistantRequest)
     {
-        var responseObject = await httpClient.PostAsync("assistants", JsonContent.Create(createAssistantRequest
+        var responseObject = await httpClient.PostAsync($"assistants/{createAssistantRequest.Id}", JsonContent.Create(new
+        {
+            tool_resources = createAssistantRequest.ToolResources
+        }
         , new MediaTypeHeaderValue(System.Net.Mime.MediaTypeNames.Application.Json)
-        , System.Text.Json.JsonSerializerOptions.Default));
+        , new JsonSerializerOptions() { DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull }));
 
         return await ProcessResultToObject<Assistant<ResponseFormatType>>(responseObject);
     }

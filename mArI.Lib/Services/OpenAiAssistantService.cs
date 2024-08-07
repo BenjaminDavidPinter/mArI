@@ -81,7 +81,7 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="assistant"></param>
     /// <param name="store"></param>
     /// <returns></returns>
-    public async Task<Assistant<object>> AddVectorStoreToAssistant(Assistant<object> assistant, VectorStore store) {
+    public async Task<Assistant<T>> AddVectorStoreToAssistant<T>(Assistant<T> assistant, VectorStore store) {
         if(assistant.ToolResources == null){
             assistant.ToolResources = new();
             assistant.ToolResources.FileSearch = new();
@@ -115,15 +115,17 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="message"></param>
     /// <param name="assistant"></param>
     /// <returns></returns>
-    public async Task<List<MessageContent>> AskQuestionToAssistant<T>(Message<string> message, Assistant<T> assistant) {
+    public async Task<List<MessageContent>> AskQuestionToAssistant<T>(
+        Message<string> message, 
+        Assistant<T> assistant) 
+    {
         List<MessageContent> resultMessages = [];
-
         var targetThread = await httpService.CreateThread();
         await httpService.CreateMessage(targetThread.Id, message);
         var run = await httpService.CreateRun(targetThread.Id, assistant.Id);
         var completedRun = await WaitForRunToComplete(targetThread.Id, run.Id);
         var runSteps = await httpService.ListRunSteps(targetThread.Id, completedRun.Id);
-        foreach (var step in runSteps.Steps)
+        foreach (var step in runSteps.Steps.Where(x => x.StepDetails.MessageCreation != null))
         {
             var thisMessage = await httpService.GetMessage(targetThread.Id, step.StepDetails.MessageCreation.MessageId);
             resultMessages.AddRange(thisMessage.Content);

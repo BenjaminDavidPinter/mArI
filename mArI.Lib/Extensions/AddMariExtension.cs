@@ -16,5 +16,6 @@ public static class AddMariExtensions
     {
         servicesCollection.AddTransient<Government>();
         servicesCollection.AddSingleton(new OpenAiHttpService(openAiApiKey, maxRequestsPerSecond));
+        servicesCollection.AddTransient<OpenAIAssistantService>();
     }
 }
