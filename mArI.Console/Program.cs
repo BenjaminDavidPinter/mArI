@@ -1,9 +1,7 @@
 ﻿using Moq;
 using mArI.Services;
 using mArI.Models.Enums;
-using System.Text.Json;
 using mArI.Models;
-using mArI.Model;
 
 
 var openAiApiKey = File.ReadAllText(@"C:\vs\ApiKey.txt").Trim();
@@ -23,7 +21,7 @@ var AutomationCodeQuestionAssistant = await assistantService.CreateAssistant<str
     Tools = new() { new Tool() { type = "file_search" } }
 });
 
-var AutomationVectorStore = await testServ.GetVectorStore("vs_BaRdMbisjDzZCnr6XjG7dfeK");
+var AutomationVectorStore = await testServ.GetVectorStore("");
 
 var thisMessage = new Message<string>()
 {
