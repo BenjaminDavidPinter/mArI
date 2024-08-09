@@ -1,3 +1,4 @@
+using mArI.Lib.Enums;
 using mArI.Lib.Models;
 using mArI.Models;
 
@@ -81,7 +82,7 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="assistant"></param>
     /// <param name="store"></param>
     /// <returns></returns>
-    public async Task<Assistant<T>> AddVectorStoreToAssistant<T>(Assistant<T> assistant, VectorStore store) {
+    public async Task<Assistant<T>> AddVectorStoreForFileSearch<T>(Assistant<T> assistant, VectorStore store) {
         if(assistant.ToolResources == null){
             assistant.ToolResources = new();
             assistant.ToolResources.FileSearch = new();
@@ -96,7 +97,6 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
         assistant.ToolResources.FileSearch.VectorStoreIds.Add(store.Id);
         return await httpService.ModifyAssistant(assistant);
     }
-
 
     /// <summary>
     /// Remove a vector store from an assistant
@@ -138,8 +138,15 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// </summary>
     /// <param name="assistantToDelete"></param>
     /// <returns></returns>
-    public async Task<DeleteObjectResponse> DeleteAssistant(Assistant<object> assistantToDelete){
-        return await httpService.DeleteAssistant(assistantToDelete.Id);
+    public async Task<DeleteObjectResponse> DeleteObject(string id, DeleteObjectRequestType objectType){
+        return objectType switch
+        {
+            DeleteObjectRequestType.Assistant => await httpService.DeleteAssistant(id),
+            DeleteObjectRequestType.File => await httpService.DeleteFile(id),
+            DeleteObjectRequestType.VectorStore => await httpService.DeleteVectorStore(id),
+            DeleteObjectRequestType.Thread => await httpService.DeleteThread(id),
+            _ => throw new ArgumentOutOfRangeException(nameof(objectType)),
+        };
     }
 
     /// <summary>

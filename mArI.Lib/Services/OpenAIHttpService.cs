@@ -257,20 +257,13 @@ public class OpenAiHttpService
     }
 
     //TODO: Turn this into a real result model
-    public async Task<(bool status, string description)> DeleteFile(string fileId)
+    public async Task<DeleteObjectResponse> DeleteFile(string fileId)
     {
         var deleteFileUri = $"files/{fileId}";
 
         var response = await httpClient.DeleteAsync(deleteFileUri);
 
-        if (response.IsSuccessStatusCode)
-        {
-            return (true, "File was deleted");
-        }
-        else
-        {
-            return (false, response.ReasonPhrase! ?? string.Empty);
-        }
+        return await ProcessResultToObject<DeleteObjectResponse>(response);
     }
 
     public async Task<List<byte>> GetFileContent(string fileId)

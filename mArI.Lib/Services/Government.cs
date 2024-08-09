@@ -374,7 +374,7 @@ public class Government
         int totalDeletions = 0;
         try
         {
-            List<Task<(bool status, string description)>> deletionRequests = [];
+            List<Task<DeleteObjectResponse>> deletionRequests = [];
             foreach (var file in allFiles.Data ?? new())
             {
                 deletionRequests.Add(openAiHttpService.DeleteFile(file.Id));
@@ -382,7 +382,7 @@ public class Government
             }
 
             Task.WaitAll([.. deletionRequests]);
-            totalDeletions += deletionRequests.Count(x => x.Result.status);
+            totalDeletions += deletionRequests.Count(x => x.Result.Deleted);
 
             if (allFiles.HasMore)
             {
