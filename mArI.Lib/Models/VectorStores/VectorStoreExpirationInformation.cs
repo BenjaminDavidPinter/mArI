@@ -6,7 +6,8 @@ namespace mArI.Models;
 public class VectorStoreExpirationInformation
 {
     [JsonPropertyName("anchor")]
-    public string Anchor { get; set; }
+    public string? Anchor { get; set; }
+
     [JsonPropertyName("days")]
     public int Days { get; set; }
 }

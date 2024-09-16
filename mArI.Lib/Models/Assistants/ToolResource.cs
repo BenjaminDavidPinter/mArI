@@ -6,8 +6,8 @@ namespace mArI.Models;
 public class ToolResource
 {
     [JsonPropertyName("code_interpreter")]
-    public CodeInterpreterToolResource CodeInterpreter { get; set; }
-    
+    public CodeInterpreterToolResource? CodeInterpreter { get; set; }
+
     [JsonPropertyName("file_search")]
-    public FileSearchToolResource FileSearch { get; set; }
+    public FileSearchToolResource? FileSearch { get; set; }
 }

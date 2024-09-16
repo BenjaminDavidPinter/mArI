@@ -8,5 +8,5 @@ public class ChunkingStrategy
     public string? @Type { get; set; }
 
     [JsonPropertyName("static")]
-    public StaticChunkStrategyOptions Static { get; set; }
+    public StaticChunkStrategyOptions? Static { get; set; }
 }

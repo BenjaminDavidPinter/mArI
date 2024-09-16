@@ -7,22 +7,22 @@ namespace mArI.Models;
 public class Run
 {
     [JsonPropertyName("id")]
-    public string Id { get; set; }
+    public string? Id { get; set; }
 
     [JsonPropertyName("object")]
-    public string Object { get; set; }
+    public string? Object { get; set; }
 
     [JsonPropertyName("created_at")]
     public long? CreatedAt { get; set; }
 
     [JsonPropertyName("thread_id")]
-    public string ThreadId { get; set; }
+    public string? ThreadId { get; set; }
 
     [JsonPropertyName("assistant_id")]
-    public string AssistantId { get; set; }
+    public string? AssistantId { get; set; }
 
     [JsonPropertyName("status")]
-    public string Status { get; set; }
+    public string? Status { get; set; }
 
     [JsonPropertyName("required_action")]
     public RequiredAction? RequiredAction { get; set; }
@@ -49,10 +49,10 @@ public class Run
     public IncompleteDetails? IncompleteDetails { get; set; }
 
     [JsonPropertyName("model")]
-    public string Model { get; set; }
+    public string? Model { get; set; }
 
     [JsonPropertyName("instructions")]
-    public string Instructions { get; set; }
+    public string? Instructions { get; set; }
 
     [JsonPropertyName("tools")]
     public List<Tool>? Tools { get; set; }
@@ -79,11 +79,11 @@ public class Run
     public TruncationStrategy? TruncationStrategy { get; set; }
 
     [JsonPropertyName("tool_choice")]
-    public string ToolChoice { get; set; }
+    public string? ToolChoice { get; set; }
 
     [JsonPropertyName("parallel_tool_calls")]
     public bool? ParallelToolCalls { get; set; }
 
     [JsonPropertyName("response_format")]
-    public object ResponseFormat { get; set; }
+    public object? ResponseFormat { get; set; }
 }

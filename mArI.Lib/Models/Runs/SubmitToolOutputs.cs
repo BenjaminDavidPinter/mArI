@@ -1,6 +1,9 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class SubmitToolOutputs
 {
-    public List<Tool> tool_calls { get; set; }
+    [JsonPropertyName("tool_calls")]
+    public List<Tool>? ToolCalls { get; set; }
 }

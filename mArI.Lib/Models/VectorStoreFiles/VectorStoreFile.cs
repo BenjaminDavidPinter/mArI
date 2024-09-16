@@ -5,7 +5,7 @@ namespace mArI.Models;
 public class VectorStoreFile
 {
     [JsonPropertyName("id")]
-    public string? Id { get; set; } 
+    public string? Id { get; set; }
 
     [JsonPropertyName("object")]
     public string? Object { get; set; }
@@ -23,7 +23,7 @@ public class VectorStoreFile
     public string? status { get; set; }
 
     [JsonPropertyName("last_error")]
-    public VectorStoreFileError LastError { get; set; }
+    public VectorStoreFileError? LastError { get; set; }
 
     [JsonPropertyName("chunking_strategy")]
     public ChunkingStrategy? ChunkingStrategy { get; set; }

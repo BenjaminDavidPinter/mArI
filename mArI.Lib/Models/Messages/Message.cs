@@ -6,7 +6,7 @@ public class Message<ContentFormat>
 {
     [JsonPropertyName("id")]
     public string? Id { get; set; }
-    
+
     [JsonPropertyName("object")]
     public string? Object { get; set; }
 
@@ -32,9 +32,9 @@ public class Message<ContentFormat>
     public string? Role { get; set; }
 
     [JsonPropertyName("content")]
-    public ContentFormat Content { get; set; }
+    public ContentFormat? Content { get; set; }
 
-    [JsonPropertyName("assistant_id")]   
+    [JsonPropertyName("assistant_id")]
     public string? AssistantId { get; set; }
 
     [JsonPropertyName("run_id")]

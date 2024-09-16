@@ -1,3 +1,5 @@
+using System.Linq.Expressions;
+using System.Reflection.Metadata.Ecma335;
 using mArI.Lib.Enums;
 using mArI.Lib.Models;
 using mArI.Models;
@@ -11,7 +13,8 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// </summary>
     /// <param name="assistantToCreate"></param>
     /// <returns></returns>
-    public async Task<Assistant<ResponseFormatType>> CreateAssistant<ResponseFormatType>(Assistant<ResponseFormatType> assistantToCreate){
+    public async Task<Assistant<ResponseFormatType>> CreateAssistant<ResponseFormatType>(Assistant<ResponseFormatType> assistantToCreate)
+    {
         return await httpService.CreateAssistant(assistantToCreate);
     }
 
@@ -20,9 +23,10 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// </summary>
     /// <param name="files">The key is the filename, the value is the file content</param>
     /// <returns></returns>
-    public async Task<List<OpenAiFile>> UploadFiles(Dictionary<string, byte[]> files, string purpose){
+    public async Task<List<OpenAiFile>> UploadFiles(Dictionary<string, byte[]> files, string purpose)
+    {
         List<OpenAiFile> uploadedFiles = [];
-        foreach(var key in files.Keys)
+        foreach (var key in files.Keys)
         {
             uploadedFiles.Add(await httpService.UploadFile(files[key], key, purpose));
         }
@@ -34,7 +38,7 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// </summary>
     /// <param name="vectoreStoreToCreate"></param>
     /// <returns></returns>
-    public async Task<VectorStore> CreateVectorStore(VectorStore vectoreStoreToCreate) 
+    public async Task<VectorStore> CreateVectorStore(VectorStore vectoreStoreToCreate)
     {
         return await httpService.CreateVectorStore(vectoreStoreToCreate);
     }
@@ -47,9 +51,18 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <returns></returns>
     public async Task<List<VectorStoreFile>> AddFilesToVectorStore(VectorStore vectorStore, List<OpenAiFile> filesToAttach)
     {
+        if (string.IsNullOrEmpty(vectorStore.Id))
+        {
+            throw new MissingFieldException(nameof(vectorStore.Id));
+        }
         List<VectorStoreFile> filesThatWereAttached = [];
         foreach (var file in filesToAttach)
         {
+            if (string.IsNullOrEmpty(file.Id))
+            {
+                //TODO: Ew
+                continue;
+            }
             filesThatWereAttached.Add(await httpService.CreateVectorStoreFile(vectorStore.Id, file.Id));
         }
         return filesThatWereAttached;
@@ -62,16 +75,34 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="pollingRate"></param>
     /// <param name="maxTries"></param>
     /// <returns></returns>
-    public async Task WaitForVectorStoreUploadsToFinish(VectorStore storeToWait, int? pollingRate = 1000, int? maxTries = 5)
+    public async Task WaitForVectorStoreUploadsToFinish(VectorStore storeToWait, int pollingRate = 1000, int maxTries = 5)
     {
+        if (string.IsNullOrEmpty(storeToWait.Id))
+        {
+            throw new MissingFieldException(nameof(storeToWait.Id));
+        }
         storeToWait = await httpService.GetVectorStore(storeToWait.Id);
         int totalTries = 0;
-        while(storeToWait.FileCounts.InProgress > 0 && totalTries <= maxTries){
-            await Task.Delay(pollingRate.Value);
-            storeToWait = await httpService.GetVectorStore(storeToWait.Id);
+
+        if (storeToWait == null
+        || storeToWait.FileCounts == null
+        || (storeToWait.FileCounts.Cancelled == 0
+            && storeToWait.FileCounts.Completed == 0
+            && storeToWait.FileCounts.Failed == 0
+            && storeToWait.FileCounts.InProgress == 0
+            && storeToWait.FileCounts.Total == 0))
+        {
+            throw new Exception("No files to wait for");
+        }
+
+        while (storeToWait.FileCounts?.InProgress > 0 && totalTries <= maxTries)
+        {
+            await Task.Delay(pollingRate);
+            storeToWait = await httpService.GetVectorStore(storeToWait.Id ?? throw new MissingFieldException(nameof(storeToWait.Id)));
             totalTries += 1;
         }
-        if(totalTries == maxTries){
+        if (totalTries == maxTries)
+        {
             throw new Exception("Files did not finish uploading in time.");
         }
     }
@@ -82,15 +113,23 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="assistant"></param>
     /// <param name="store"></param>
     /// <returns></returns>
-    public async Task<Assistant<T>> AddVectorStoreForFileSearch<T>(Assistant<T> assistant, VectorStore store) {
-        if(assistant.ToolResources == null){
+    public async Task<Assistant<T>> AddVectorStoreForFileSearch<T>(Assistant<T> assistant, VectorStore store)
+    {
+        if (string.IsNullOrEmpty(store.Id))
+        {
+            throw new MissingFieldException(nameof(store.Id));
+        }
+        if (assistant.ToolResources == null)
+        {
             assistant.ToolResources = new();
             assistant.ToolResources.FileSearch = new();
         }
-        if(assistant.ToolResources.FileSearch == null){
+        if (assistant.ToolResources.FileSearch == null)
+        {
             assistant.ToolResources.FileSearch = new();
         }
-        if(assistant.ToolResources.FileSearch.VectorStoreIds == null){
+        if (assistant.ToolResources.FileSearch.VectorStoreIds == null)
+        {
             assistant.ToolResources.FileSearch.VectorStoreIds = new();
         }
 
@@ -104,7 +143,15 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="assistant"></param>
     /// <param name="store"></param>
     /// <returns></returns>
-    public async Task<Assistant<object>> RemoveVectorStoreFromAssistant(Assistant<object> assistant, VectorStore store){
+    public async Task<Assistant<object>> RemoveVectorStoreFromAssistant(Assistant<object> assistant, VectorStore store)
+    {
+        if (assistant.ToolResources == null
+        || assistant.ToolResources.FileSearch == null
+        || assistant.ToolResources.FileSearch.VectorStoreIds == null)
+        {
+            return assistant;
+        }
+
         assistant.ToolResources.FileSearch.VectorStoreIds = assistant.ToolResources.FileSearch.VectorStoreIds.Where(x => x != store.Id).ToList();
         return await httpService.ModifyAssistant(assistant);
     }
@@ -116,19 +163,27 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="assistant"></param>
     /// <returns></returns>
     public async Task<List<MessageContent>> AskQuestionToAssistant<T>(
-        Message<string> message, 
-        Assistant<T> assistant) 
+        Message<string> message,
+        Assistant<T> assistant)
     {
+        if (string.IsNullOrEmpty(assistant.Id))
+        {
+            throw new MissingFieldException(nameof(assistant.Id));
+        }
         List<MessageContent> resultMessages = [];
         var targetThread = await httpService.CreateThread();
+        if (string.IsNullOrEmpty(targetThread.Id))
+        {
+            throw new Exception("Could not retrieve thread");
+        }
         await httpService.CreateMessage(targetThread.Id, message);
         var run = await httpService.CreateRun(targetThread.Id, assistant.Id);
-        var completedRun = await WaitForRunToComplete(targetThread.Id, run.Id);
-        var runSteps = await httpService.ListRunSteps(targetThread.Id, completedRun.Id);
-        foreach (var step in runSteps.Steps.Where(x => x.StepDetails.MessageCreation != null))
+        var completedRun = await WaitForRunToComplete(targetThread.Id, run.Id ?? throw new Exception("Could not retrieve run"));
+        var runSteps = await httpService.ListRunSteps(targetThread.Id, completedRun.Id ?? throw new Exception("Could not retrieve completed run"));
+        foreach (var step in runSteps.Steps?.Where(x => x.StepDetails?.MessageCreation != null) ?? [])
         {
-            var thisMessage = await httpService.GetMessage(targetThread.Id, step.StepDetails.MessageCreation.MessageId);
-            resultMessages.AddRange(thisMessage.Content);
+            var thisMessage = await httpService.GetMessage(targetThread.Id, step.StepDetails?.MessageCreation?.MessageId ?? throw new Exception("Something went wrong while getting the latest message from the assistant"));
+            resultMessages.AddRange(thisMessage.Content ?? throw new Exception("Could not retrieve content from message"));
         }
         return resultMessages;
     }
@@ -138,7 +193,8 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// </summary>
     /// <param name="assistantToDelete"></param>
     /// <returns></returns>
-    public async Task<DeleteObjectResponse> DeleteObject(string id, DeleteObjectRequestType objectType){
+    public async Task<DeleteObjectResponse> DeleteObject(string id, DeleteObjectRequestType objectType)
+    {
         return objectType switch
         {
             DeleteObjectRequestType.Assistant => await httpService.DeleteAssistant(id),
@@ -156,7 +212,7 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="runId"></param>
     /// <param name="pollingRate"></param>
     /// <returns></returns>
-    private async Task<Run> WaitForRunToComplete(string threadId, string runId, int? pollingRate = 1000)
+    private async Task<Run> WaitForRunToComplete(string threadId, string runId, int pollingRate = 1000)
     {
         var currentResult = await httpService.GetRun(threadId, runId);
         while (currentResult.Status != "completed"
@@ -166,7 +222,7 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
         && currentResult.Status != "requires_action"
         && currentResult.Status != "expired")
         {
-            await Task.Delay(pollingRate.Value);
+            await Task.Delay(pollingRate);
             currentResult = await httpService.GetRun(threadId, runId);
         }
 

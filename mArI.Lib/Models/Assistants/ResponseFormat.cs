@@ -5,5 +5,5 @@ namespace mArI.Models;
 public class ResponseFormat
 {
     [JsonPropertyName("type")]
-    public string Type { get; set; }
+    public string? Type { get; set; }
 }

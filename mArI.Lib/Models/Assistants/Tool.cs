@@ -1,10 +1,13 @@
 using System.Reflection.Metadata.Ecma335;
+using System.Text.Json.Serialization;
 
 namespace mArI.Models;
 
 public class Tool
 {
-    public string type { get; set; }
-    public FileSearch file_search { get; set; }
-    public Function function { get; set; }
+    [JsonPropertyName("type")]
+    public string? Type { get; set; }
+
+    [JsonPropertyName("file_search")]
+    public FileSearch? FileSearch { get; set; }
 }

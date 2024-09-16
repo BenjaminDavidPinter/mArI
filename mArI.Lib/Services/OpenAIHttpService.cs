@@ -185,7 +185,7 @@ public class OpenAiHttpService
 
     public async Task<List<Run>> ListRuns(string threadId)
     {
-        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs");
+        var responseObject = await httpClient.GetAsync($"threads/{threadId}/runs");
 
         throw new NotImplementedException();
     }
@@ -217,7 +217,7 @@ public class OpenAiHttpService
 
     public async Task<RunCancellationRequest> CancelRun(string threadId, string runId)
     {
-        var responseObject = httpClient.PostAsync($"threads/{threadId}/runs{runId}/cancel", null);
+        var responseObject = await httpClient.PostAsync($"threads/{threadId}/runs{runId}/cancel", null);
 
         throw new NotImplementedException();
     }
@@ -233,7 +233,7 @@ public class OpenAiHttpService
 
     public async Task<RunStep> GetRunStep(string threadId, string runId, string stepId)
     {
-        var responseObject = httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps/{stepId}");
+        var responseObject = await httpClient.GetAsync($"threads/{threadId}/runs/{runId}/steps/{stepId}");
 
         throw new NotImplementedException();
     }
@@ -241,7 +241,7 @@ public class OpenAiHttpService
 
     #region File
     public async Task<OpenAiFile> UploadFile(
-        byte[] bytes, 
+        byte[] bytes,
         string fileName,
         string purpose)
     {

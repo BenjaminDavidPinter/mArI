@@ -1,7 +1,12 @@
+using System.Text.Json.Serialization;
+
 namespace mArI.Models;
 
 public class Error
 {
-    public string code { get; set; }
-    public string message { get; set; }
+    [JsonPropertyName("code")]
+    public string? Code { get; set; }
+
+    [JsonPropertyName("message")]
+    public string? Message { get; set; }
 }

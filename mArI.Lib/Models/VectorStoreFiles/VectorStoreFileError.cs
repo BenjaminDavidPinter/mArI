@@ -6,9 +6,9 @@ namespace mArI.Models;
 public class VectorStoreFileError
 {
     [JsonPropertyName("code")]
-    public string Code { get; set; }
+    public string? Code { get; set; }
 
     [JsonPropertyName("message")]
-    public string Message { get; set; }
+    public string? Message { get; set; }
 }
 

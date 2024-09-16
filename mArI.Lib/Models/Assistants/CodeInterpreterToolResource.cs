@@ -1,6 +1,9 @@
-﻿namespace mArI.Model;
+﻿using System.Text.Json.Serialization;
+
+namespace mArI.Model;
 
 public class CodeInterpreterToolResource
 {
-    List<string> file_ids { get; set; }
+    [JsonPropertyName("file_ids")]
+    List<string>? FileIds { get; set; }
 }
