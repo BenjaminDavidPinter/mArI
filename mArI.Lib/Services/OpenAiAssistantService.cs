@@ -1,8 +1,7 @@
-using System.Linq.Expressions;
-using System.Reflection.Metadata.Ecma335;
 using mArI.Lib.Enums;
 using mArI.Lib.Models;
 using mArI.Models;
+using mArI.Models.Enums;
 
 namespace mArI.Services;
 
@@ -16,6 +15,25 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     public async Task<Assistant<ResponseFormatType>> CreateAssistant<ResponseFormatType>(Assistant<ResponseFormatType> assistantToCreate)
     {
         return await httpService.CreateAssistant(assistantToCreate);
+    }
+
+    public async Task<string> AskQuestion(string message)
+    {
+        var myAssistant = await CreateAssistant(new Assistant<object>(OpenAiModel.GPT4o)
+        {
+            Instructions = ""
+        });
+
+        var thisMessage = new Message<string>()
+        {
+            Role = "user",
+            Content = "Is the sky blue",
+            Attachments = new()
+        };
+
+        var answer = await AskQuestionToAssistant(thisMessage, myAssistant);
+
+        return answer?.First()?.Text?.Value ?? string.Empty;
     }
 
     /// <summary>
