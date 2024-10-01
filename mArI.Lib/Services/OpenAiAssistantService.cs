@@ -24,10 +24,10 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
             Instructions = ""
         });
 
-        var thisMessage = new Message<string>()
+        var thisMessage = new Message<object>()
         {
             Role = "user",
-            Content = "Is the sky blue",
+            Content = message,
             Attachments = new()
         };
 
@@ -181,7 +181,7 @@ public class OpenAIAssistantService(OpenAiHttpService httpService)
     /// <param name="assistant"></param>
     /// <returns></returns>
     public async Task<List<MessageContent>> AskQuestionToAssistant<T>(
-        Message<string> message,
+        Message<object> message,
         Assistant<T> assistant)
     {
         if (string.IsNullOrEmpty(assistant.Id))
